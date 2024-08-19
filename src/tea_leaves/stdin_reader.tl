@@ -1,7 +1,6 @@
 local _module_name = "stdin_reader"
 
 -- <imports>
-local util <const> = require("tea_leaves.util")
 local lusc <const> = require("lusc")
 local asserts <const> = require("tea_leaves.asserts")
 local uv <const> = require("luv")

@@ -16,6 +16,7 @@ dependencies = {
    "tl",
    "dkjson",
    "argparse",
+   "inspect",
    "luv",
    "lusc_luv >= 4.0",
 }

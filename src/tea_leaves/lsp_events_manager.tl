@@ -3,7 +3,6 @@ local _module_name = "event_handler_manager"
 local lsp <const> = require("tea_leaves.lsp")
 local LspReaderWriter <const> = require("tea_leaves.lsp_reader_writer")
 local lusc <const> = require("lusc")
-local util <const> = require("tea_leaves.util")
 local asserts <const> = require("tea_leaves.asserts")
 local tracing <const> = require("tea_leaves.tracing")
 local class <const> = require("tea_leaves.class")

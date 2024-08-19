@@ -1,10 +1,9 @@
 local _module_name = "server_state"
 
 -- <imports>
-local util <const> = require("tea_leaves.util")
 local asserts <const> = require("tea_leaves.asserts")
 local lsp <const> = require("tea_leaves.lsp")
-local Path <const> = require("sv.misc.path")
+local Path <const> = require("tea_leaves.path")
 local lfs <const> = require("lfs")
 local TealProjectConfig = require("tea_leaves.teal_project_config")
 local tl <const> = require("tl")

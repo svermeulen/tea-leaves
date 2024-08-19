@@ -1,12 +1,12 @@
 
 local util <const> = require("tea_leaves.util")
 local asserts <const> = require("tea_leaves.asserts")
-local Path <const> = require("sv.misc.path")
-local TraceEntry <const> = require("sv.misc.trace_entry")
-local platform_util <const> = require("sv.misc.platform_util")
+local Path <const> = require("tea_leaves.path")
+local TraceEntry <const> = require("tea_leaves.trace_entry")
 local json <const> = require("dkjson")
 local uv <const> = require("luv")
 local class <const> = require("tea_leaves.class")
+local inspect <const> = require("inspect")
 
 local record TraceStream
    _file_stream:FILE
@@ -47,12 +47,12 @@ function TraceStream:_cleanup_old_logs(dir:Path)
    local current_time_sec = os.time()
    local max_age_sec = 60 * 60 * 24 -- 1 day
 
-   for file_path in sv.itr(dir:get_sub_files()) do
+   for _, file_path in ipairs(dir:get_sub_files()) do
       local stats = assert(uv.fs_stat(file_path.value))
       local mod_time_sec = stats.mtime.sec
 
       if current_time_sec - mod_time_sec > max_age_sec then
-         sv.try {
+         util.try {
             action = function():nil
                file_path:delete_file()
             end,
@@ -65,7 +65,9 @@ function TraceStream:_cleanup_old_logs(dir:Path)
 end
 
 function TraceStream:_get_log_dir():Path
-   local log_dir = platform_util.get_svkj_cache_dir():join("tea-leaves")
+   local homedir = Path(assert(uv.os_homedir()))
+   asserts.that(homedir:exists())
+   local log_dir = homedir:join(".cache"):join("tea-leaves")
 
    if not log_dir:is_directory() then
       log_dir:create_directory()
@@ -160,7 +162,7 @@ function TraceStream:log_entry(entry:TraceEntry):nil
       elseif value_type == "userdata" then
          value = tostring(value)
       elseif value_type == "table" then
-         value = sv.inspect(value)
+         value = inspect(value)
       else
          -- These are all serializable so value is fine as is
          asserts.that(value_type == "string" or value_type == "number" or value_type == "nil" or value_type == "boolean")
@@ -173,7 +175,7 @@ function TraceStream:log_entry(entry:TraceEntry):nil
    local old_fields = entry.fields
    entry.fields = serializable_fields
 
-   sv.try {
+   util.try {
       action = function():nil
          self._file_stream:write(json.encode(entry) .. "\n")
       end,

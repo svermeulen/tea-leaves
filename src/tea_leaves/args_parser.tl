@@ -1,5 +1,4 @@
 
-local util <const> = require("tea_leaves.util")
 local asserts <const> = require("tea_leaves.asserts")
 
 local record args_parser

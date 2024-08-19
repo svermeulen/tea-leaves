@@ -7,12 +7,11 @@ local TraceStream <const> = require("tea_leaves.trace_stream")
 local DocumentManager <const> = require("tea_leaves.document_manager")
 local ServerState <const> = require("tea_leaves.server_state")
 local LspReaderWriter <const> = require("tea_leaves.lsp_reader_writer")
-local Path <const> = require("sv.misc.path")
+local Path <const> = require("tea_leaves.path")
 local Uri <const> = require("tea_leaves.uri")
 local lsp <const> = require("tea_leaves.lsp")
 local LspEventsManager <const> = require("tea_leaves.lsp_events_manager")
 local uv <const> = require("luv")
-local util <const> = require("tea_leaves.util")
 local asserts <const> = require("tea_leaves.asserts")
 local tracing <const> = require("tea_leaves.tracing")
 local class <const> = require("tea_leaves.class")
@@ -317,7 +316,7 @@ function MiscHandlers:_on_hover(params:lsp.Method.Params, id:integer):nil
 end
 
 function MiscHandlers:_add_handler(name:lsp.Method.Name, handler:function(MiscHandlers, lsp.Method.Params, integer):nil)
-   self._lsp_events_manager:set_handler(name, sv.func.partial3(handler, self))
+   self._lsp_events_manager:set_handler(name, function() handler(self) end)
 end
 
 function MiscHandlers:initialize()

@@ -1,5 +1,6 @@
 
 local asserts <const> = require("tea_leaves.asserts")
+local util <const> = require("tea_leaves.util")
 
 --[[
    uri spec:
@@ -77,7 +78,7 @@ function Uri.parse(text: string): Uri
 
    -- Hack for windows paths
    -- TODO - reconsider above logic
-   if svu.platform == "windows" and parsed.path:starts_with("/") then
+   if util.get_platform() == "windows" and parsed.path:starts_with("/") then
       parsed.path = parsed.path:sub(2)
    end
 

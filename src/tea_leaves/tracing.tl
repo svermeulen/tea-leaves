@@ -127,7 +127,7 @@ local function create_entry(module:string, level:TraceEntry.Level, message_templ
       end
    end
 
-   local adjusted_message_template, format_arg_names, arg_formattings = _process_format_args(message_template)
+   local adjusted_message_template, format_arg_names, _arg_formattings = _process_format_args(message_template)
 
    while #format_arg_names > #format_args do
       table.insert(format_args, "nil")

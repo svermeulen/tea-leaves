@@ -5,7 +5,6 @@ local ServerState <const> = require("tea_leaves.server_state")
 local LspReaderWriter <const> = require("tea_leaves.lsp_reader_writer")
 local Uri <const> = require("tea_leaves.uri")
 local Document <const> = require("tea_leaves.document")
-local util <const> = require("tea_leaves.util")
 local asserts <const> = require("tea_leaves.asserts")
 local class <const> = require("tea_leaves.class")
 
