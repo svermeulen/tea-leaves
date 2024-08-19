@@ -16,6 +16,7 @@ luarocks_tree/bin/tl gen src/tea_leaves/lsp_events_manager.tl -o gen/tea_leaves/
 luarocks_tree/bin/tl gen src/tea_leaves/lsp_reader_writer.tl -o gen/tea_leaves/lsp_reader_writer.lua
 luarocks_tree/bin/tl gen src/tea_leaves/main.tl -o gen/tea_leaves/main.lua
 luarocks_tree/bin/tl gen src/tea_leaves/misc_handlers.tl -o gen/tea_leaves/misc_handlers.lua
+luarocks_tree/bin/tl gen src/tea_leaves/path.tl -o gen/tea_leaves/path.lua
 luarocks_tree/bin/tl gen src/tea_leaves/server_state.tl -o gen/tea_leaves/server_state.lua
 luarocks_tree/bin/tl gen src/tea_leaves/stdin_reader.tl -o gen/tea_leaves/stdin_reader.lua
 luarocks_tree/bin/tl gen src/tea_leaves/teal_project_config.tl -o gen/tea_leaves/teal_project_config.lua
