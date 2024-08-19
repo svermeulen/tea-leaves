@@ -5,3 +5,7 @@
 /luarocks.bat
 /lua.bat
 /luarocks_tree
+
+# install dirs on CI machine
+/.install
+/.lua
