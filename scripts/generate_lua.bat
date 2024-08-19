@@ -21,7 +21,6 @@ call luarocks\bin\tl.bat gen %~dp0\..\src\tea_leaves\misc_handlers.tl -o %~dp0\.
 call luarocks\bin\tl.bat gen %~dp0\..\src\tea_leaves\server_state.tl -o %~dp0\..\gen\tea_leaves\server_state.lua
 call luarocks\bin\tl.bat gen %~dp0\..\src\tea_leaves\stdin_reader.tl -o %~dp0\..\gen\tea_leaves\stdin_reader.lua
 call luarocks\bin\tl.bat gen %~dp0\..\src\tea_leaves\teal_project_config.tl -o %~dp0\..\gen\tea_leaves\teal_project_config.lua
-call luarocks\bin\tl.bat gen %~dp0\..\src\tea_leaves\tl_helper.tl -o %~dp0\..\gen\tea_leaves\tl_helper.lua
 call luarocks\bin\tl.bat gen %~dp0\..\src\tea_leaves\trace_entry.tl -o %~dp0\..\gen\tea_leaves\trace_entry.lua
 call luarocks\bin\tl.bat gen %~dp0\..\src\tea_leaves\trace_stream.tl -o %~dp0\..\gen\tea_leaves\trace_stream.lua
 call luarocks\bin\tl.bat gen %~dp0\..\src\tea_leaves\tracing.tl -o %~dp0\..\gen\tea_leaves\tracing.lua

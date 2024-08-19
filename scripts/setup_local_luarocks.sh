@@ -13,6 +13,9 @@ LUAROCKS_TREE="$(pwd)/luarocks_tree"
 echo "Installing project dependencies..."
 luarocks make --tree="$LUAROCKS_TREE"
 
+echo "Installing tlcheck for linting..."
+luarocks install tlcheck --tree="$LUAROCKS_TREE"
+
 # Confirm installations
 echo "Installed LuaRocks packages:"
 luarocks list --tree="$LUAROCKS_TREE"
