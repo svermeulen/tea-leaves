@@ -143,6 +143,13 @@ local function create_entry(module:string, level:TraceEntry.Level, message_templ
       end
    end
 
+   for i=1,#format_arg_names do
+      local arg_name = format_arg_names[i]
+      local arg_value = format_args[i]
+      asserts.that(fields[arg_name] == nil, "Found both map and non map value for field '{}'", arg_name)
+      fields[arg_name] = arg_value
+   end
+
    return {
       timestamp = get_unix_timestamp(),
       time = get_relative_time(),
