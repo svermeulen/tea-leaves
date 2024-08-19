@@ -226,7 +226,7 @@ function Path:canonicalize():Path
    end
 
    local path_sep = get_path_separator()
-   local new_value = path_sep:join(array_reversed(new_parts))
+   local new_value = util.string_join(path_sep, array_reversed(new_parts))
 
    for _=1,to_skip do
       new_value = ".." .. path_sep .. new_value

@@ -32,6 +32,20 @@ local function _on_error(error_obj:string):any
   return debug.traceback(error_obj, 2)
 end
 
+function util.string_join(delimiter:string, items:{string}):string
+   assert(delimiter is string)
+   assert(items ~= nil)
+
+   local result = ''
+   for _, item in ipairs(items) do
+      if #result ~= 0 then
+         result = result .. delimiter
+      end
+      result = result .. tostring(item)
+   end
+   return result
+end
+
 function util.get_platform():util.PlatformType
    if _os_type == nil then
       local raw_os_name = string.lower(_get_uname_info().sysname)
