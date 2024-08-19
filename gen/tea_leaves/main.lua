@@ -1,6 +1,4 @@
-local _module_name = "main"
-
-require("sv.misc.luv_globals")()
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local _module_name = "main"
 
 
 local EnvUpdater = require("tea_leaves.env_updater")
@@ -8,7 +6,6 @@ local DocumentManager = require("tea_leaves.document_manager")
 local ServerState = require("tea_leaves.server_state")
 local LspEventsManager = require("tea_leaves.lsp_events_manager")
 local lusc = require("lusc")
-local jit = require("jit")
 local uv = require("luv")
 local TraceStream = require("tea_leaves.trace_stream")
 local args_parser = require("tea_leaves.args_parser")
@@ -16,18 +13,24 @@ local MiscHandlers = require("tea_leaves.misc_handlers")
 local TlHelper = require("tea_leaves.tl_helper")
 local StdinReader = require("tea_leaves.stdin_reader")
 local LspReaderWriter = require("tea_leaves.lsp_reader_writer")
-local IDisposable = require("sv.misc.disposable")
 local tracing = require("tea_leaves.tracing")
+local util = require("tea_leaves.util")
+local TraceEntry = require("tea_leaves.trace_entry")
+
+
+
+
 
 local function init_logging(verbose)
    local trace_stream = TraceStream()
    trace_stream:initialize()
 
-   tracing.add_stream(sv.func.partial2(trace_stream.log_entry, trace_stream))
+   tracing.add_stream(function(entry)
+      trace_stream:log_entry(entry)
+   end)
 
    if verbose then
       tracing.set_min_level("TRACE")
-      tracing.set_trace_module_patterns({ ".*" })
    else
       tracing.set_min_level("WARNING")
    end
@@ -39,7 +42,7 @@ local function main()
 
    local trace_stream = init_logging(args.verbose)
 
-   tracing.info(_module_name, "Started new instance tea-leaves. Version: '{version}'.  JIT version: {jit_version}", { _VERSION, jit.version })
+   tracing.info(_module_name, "Started new instance tea-leaves. Lua Version: '{version}'", { _VERSION })
    tracing.info(_module_name, "Received command line args: '{}'", { args })
    tracing.info(_module_name, "CWD = {cwd}", { uv.cwd() })
    tracing.info(_module_name, "Starting tea-leaves server...")
@@ -78,7 +81,7 @@ local function main()
       tracing.info(_module_name, "Disposing...", {})
 
       if disposables then
-         for disposable in sv.itr(disposables) do
+         for _, disposable in ipairs(disposables) do
             disposable:dispose()
          end
       end
@@ -137,7 +140,7 @@ local function main()
       end
    end
 
-   sv.try({
+   util.try({
       action = run_luv,
       catch = function(err)
          tracing.error(_module_name, "Error: {error}", { err })

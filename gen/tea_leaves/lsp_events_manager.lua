@@ -3,7 +3,6 @@ local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 th
 local lsp = require("tea_leaves.lsp")
 local LspReaderWriter = require("tea_leaves.lsp_reader_writer")
 local lusc = require("lusc")
-local util = require("tea_leaves.util")
 local asserts = require("tea_leaves.asserts")
 local tracing = require("tea_leaves.tracing")
 local class = require("tea_leaves.class")

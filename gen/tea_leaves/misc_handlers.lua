@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local pairs = _tl_compat and _tl_compat.pairs or pairs; local table = _tl_compat and _tl_compat.table or table; local _module_name = "misc_handlers"
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local _module_name = "misc_handlers"
 
 
 local EnvUpdater = require("tea_leaves.env_updater")
@@ -7,12 +7,11 @@ local TraceStream = require("tea_leaves.trace_stream")
 local DocumentManager = require("tea_leaves.document_manager")
 local ServerState = require("tea_leaves.server_state")
 local LspReaderWriter = require("tea_leaves.lsp_reader_writer")
-local Path = require("sv.misc.path")
+local Path = require("tea_leaves.path")
 local Uri = require("tea_leaves.uri")
 local lsp = require("tea_leaves.lsp")
 local LspEventsManager = require("tea_leaves.lsp_events_manager")
 local uv = require("luv")
-local util = require("tea_leaves.util")
 local asserts = require("tea_leaves.asserts")
 local tracing = require("tea_leaves.tracing")
 local class = require("tea_leaves.class")
@@ -317,7 +316,7 @@ function MiscHandlers:_on_hover(params, id)
 end
 
 function MiscHandlers:_add_handler(name, handler)
-   self._lsp_events_manager:set_handler(name, sv.func.partial3(handler, self))
+   self._lsp_events_manager:set_handler(name, function() handler(self) end)
 end
 
 function MiscHandlers:initialize()

@@ -5,7 +5,6 @@ local ServerState = require("tea_leaves.server_state")
 local LspReaderWriter = require("tea_leaves.lsp_reader_writer")
 local Uri = require("tea_leaves.uri")
 local Document = require("tea_leaves.document")
-local util = require("tea_leaves.util")
 local asserts = require("tea_leaves.asserts")
 local class = require("tea_leaves.class")
 

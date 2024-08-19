@@ -15,9 +15,22 @@ local function _raise(format, ...)
    end
 end
 
+function asserts.fail(format, ...)
+   _raise(format, ...)
+end
 function asserts.that(condition, format, ...)
    if not condition then
       _raise(format, ...)
+   end
+end
+
+function asserts.is_nil(value, format, ...)
+   if value ~= nil then
+      if format == nil then
+         _raise("Expected nil value but instead found '{}'", value)
+      else
+         _raise(format, ...)
+      end
    end
 end
 

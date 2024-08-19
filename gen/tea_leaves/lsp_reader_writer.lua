@@ -1,10 +1,9 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local _module_name = "lsp_reader_writer"
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local _module_name = "lsp_reader_writer"
 
 local StdinReader = require("tea_leaves.stdin_reader")
 local lsp = require("tea_leaves.lsp")
 local json = require("dkjson")
 local uv = require("luv")
-local util = require("tea_leaves.util")
 local asserts = require("tea_leaves.asserts")
 local tracing = require("tea_leaves.tracing")
 local class = require("tea_leaves.class")
@@ -26,10 +25,6 @@ end
 
 
 
-local function quote(s)
-   return "'" .. s .. "'"
-end
-
 local function json_nullable(x)
    if x == nil then
       return json.null
@@ -46,7 +41,7 @@ function LspReaderWriter:_parse_header(lines)
    local len
    local content_type
 
-   for line in sv.itr(lines) do
+   for _, line in ipairs(lines) do
       local key, val = line:match("^([^:]+): (.+)$")
 
       asserts.that(key ~= nil and val ~= nil, "invalid header: " .. line)
@@ -58,7 +53,7 @@ function LspReaderWriter:_parse_header(lines)
          len = tonumber(val)
       elseif key == "Content-Type" then
          if contenttype[val] == nil then
-            asserts.fail("Invalid Content-Type!  Got '{}', expected one of {}", val, (", "):join(svf.array(sv.map.get_keys(contenttype)):select(quote):to_array()))
+            asserts.fail("Invalid Content-Type '{}'", val)
          end
          asserts.is_nil(content_type)
          content_type = val

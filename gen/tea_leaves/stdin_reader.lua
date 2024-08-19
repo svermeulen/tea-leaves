@@ -1,7 +1,6 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local string = _tl_compat and _tl_compat.string or string; local _module_name = "stdin_reader"
 
 
-local util = require("tea_leaves.util")
 local lusc = require("lusc")
 local asserts = require("tea_leaves.asserts")
 local uv = require("luv")

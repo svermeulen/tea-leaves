@@ -1,5 +1,4 @@
 
-local util = require("tea_leaves.util")
 local asserts = require("tea_leaves.asserts")
 
 local args_parser = {CommandLineArgs = {}, }

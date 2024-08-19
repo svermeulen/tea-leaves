@@ -127,7 +127,7 @@ local function create_entry(module, level, message_template, raw_fields)
       end
    end
 
-   local adjusted_message_template, format_arg_names, arg_formattings = _process_format_args(message_template)
+   local adjusted_message_template, format_arg_names, _arg_formattings = _process_format_args(message_template)
 
    while #format_arg_names > #format_args do
       table.insert(format_args, "nil")
@@ -141,6 +141,13 @@ local function create_entry(module, level, message_template, raw_fields)
       for _ = #format_args + 1, #format_arg_names do
          table.insert(format_args, "nil")
       end
+   end
+
+   for i = 1, #format_arg_names do
+      local arg_name = format_arg_names[i]
+      local arg_value = format_args[i]
+      asserts.that(fields[arg_name] == nil, "Found both map and non map value for field '{}'", arg_name)
+      fields[arg_name] = arg_value
    end
 
    return {

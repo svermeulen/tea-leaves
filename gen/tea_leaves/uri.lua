@@ -1,5 +1,6 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string
 local asserts = require("tea_leaves.asserts")
+local util = require("tea_leaves.util")
 
 
 
@@ -77,7 +78,7 @@ function Uri.parse(text)
 
 
 
-   if svu.platform == "windows" and parsed.path:starts_with("/") then
+   if util.get_platform() == "windows" and util.string_starts_with(parsed.path, "/") then
       parsed.path = parsed.path:sub(2)
    end
 

@@ -1,10 +1,9 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local pairs = _tl_compat and _tl_compat.pairs or pairs; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local _module_name = "server_state"
 
 
-local util = require("tea_leaves.util")
 local asserts = require("tea_leaves.asserts")
 local lsp = require("tea_leaves.lsp")
-local Path = require("sv.misc.path")
+local Path = require("tea_leaves.path")
 local lfs = require("lfs")
 local TealProjectConfig = require("tea_leaves.teal_project_config")
 local tl = require("tl")
