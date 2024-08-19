@@ -4,7 +4,6 @@ local StdinReader <const> = require("tea_leaves.stdin_reader")
 local lsp <const> = require("tea_leaves.lsp")
 local json <const> = require("dkjson")
 local uv <const> = require("luv")
-local util <const> = require("tea_leaves.util")
 local asserts <const> = require("tea_leaves.asserts")
 local tracing <const> = require("tea_leaves.tracing")
 local class <const> = require("tea_leaves.class")
@@ -26,10 +25,6 @@ local record HeaderInfo
    content_type:string
 end
 
-local function quote(s: string): string
-   return "'" .. s .. "'"
-end
-
 local function json_nullable<T>(x: T): T
    if x == nil then
       return json.null as T
@@ -46,7 +41,7 @@ function LspReaderWriter:_parse_header(lines:{string}):HeaderInfo
    local len:integer
    local content_type:string
 
-   for line in sv.itr(lines) do
+   for _, line in ipairs(lines) do
       local key, val = line:match("^([^:]+): (.+)$")
 
       asserts.that(key ~= nil and val ~= nil, "invalid header: " .. line)
@@ -58,7 +53,7 @@ function LspReaderWriter:_parse_header(lines:{string}):HeaderInfo
          len = tonumber(val) as integer
       elseif key == "Content-Type" then
          if contenttype[val] == nil then
-            asserts.fail("Invalid Content-Type!  Got '{}', expected one of {}", val, (", "):join(svf.array(sv.map.get_keys(contenttype)):select(quote):to_array()))
+            asserts.fail("Invalid Content-Type '{}'", val)
          end
          asserts.is_nil(content_type)
          content_type = val

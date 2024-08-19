@@ -28,6 +28,8 @@ local record lusc
       -- values to receive
       await_receive_next:function(Channel<T>):T, boolean
 
+      as_iterator:function(Channel<T>):(function():T)
+
       --- Receives all values, until sender is closed
       await_receive_all:function(Channel<T>):function():T
 
@@ -42,6 +44,8 @@ local record lusc
 
       -- Just calls close() after the given function completes
       close_after:function(Channel<T>, function())
+
+      is_closed: function(Channel<T>):boolean
    end
 
    record Opts
@@ -66,13 +70,20 @@ local record lusc
       end
 
       parent: Task
+      total_active_time: number
    end
 
-   record Event
+   record StickyEvent
       is_set:boolean
 
-      set:function(Event)
-      await:function(Event)
+      unset:function(StickyEvent)
+      set:function(StickyEvent)
+      await:function(StickyEvent)
+   end
+
+   record PulseEvent
+      set:function(PulseEvent)
+      await:function(PulseEvent)
    end
 
    record CancelledError
@@ -108,6 +119,8 @@ local record lusc
          hit_deadline: boolean
       end
 
+      has_cancelled:function(CancelScope):boolean
+
       cancel:function(CancelScope)
    end
 
@@ -137,22 +150,30 @@ local record lusc
    await_sleep:function(seconds:number)
    await_until:function(until_time:number)
    await_forever:function()
-   new_event:function():Event
+   new_sticky_event:function():StickyEvent
+   new_pulse_event:function():PulseEvent
    start:function(opts:Opts)
 
    -- Note that this will only cancel tasks if one of the move_on* or fail_* options
    -- are provided.  Otherwise it will wait forever for tasks to complete gracefully
-   -- Note also that if block_until_stopped is provided, it will block 
+   -- Note also that if block_until_stopped is provided, it will block
    stop:function(opts:DeadlineOpts)
 
    -- Long running tasks can check this periodically, and then shut down
    -- gracefully, instead of relying on cancels
+   -- Can also observe via the subscribe_ methods below
    stop_requested:function():boolean
+
+   subscribe_stop_requested:function(observer:function())
+   unsubscribe_stop_requested:function(observer:function())
 
    -- If true, then the current code is being executed
    -- under the lusc task loop and therefore lusc await
    -- methods can be used
-   is_processing:function():boolean
+   is_available:function():boolean
+
+   try_get_async_local:function(key:any):any
+   set_async_local:function(key:any, value:any)
 
    move_on_after:function(delay_seconds:number, handler:function(scope:CancelScope), opts:CancelScope.ShortcutOpts):CancelScope.Result
    move_on_at:function(delay_seconds:number, handler:function(scope:CancelScope), opts:CancelScope.ShortcutOpts):CancelScope.Result
@@ -180,6 +201,9 @@ local record lusc
 
    get_running_task:function():Task
    try_get_running_task:function():Task
+
+   force_unavailable:function<T>(handler:function():T):T
+   force_unavailable_wrap:function(handler:function()):function()
 
    set_impl:function(any)
 end
