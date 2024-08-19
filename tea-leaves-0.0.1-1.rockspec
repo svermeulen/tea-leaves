@@ -17,7 +17,7 @@ dependencies = {
    "dkjson",
    "argparse",
    "luv",
-   "lusc_luv",
+   "lusc_luv >= 4.0",
 }
 build = {
    type = "builtin",
