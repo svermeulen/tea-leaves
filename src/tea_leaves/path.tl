@@ -37,7 +37,7 @@ function Path:__init(value:string)
 end
 
 function Path:is_valid():boolean
-   local result = self._value:find("[" .. ("<>\"|?*"):escape_special_chars() .. "]")
+   local result = self._value:find("[" .. util.string_escape_special_chars("<>\"|?*") .. "]")
    return result == nil
 end
 
@@ -99,7 +99,7 @@ function Path:is_absolute():boolean
       return self._value:match('^[a-zA-Z]:[\\/]') ~= nil
    end
 
-   return self._value:starts_with('/')
+   return util.string_starts_with(self._value, '/')
 end
 
 function Path:is_relative():boolean

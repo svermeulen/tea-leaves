@@ -78,7 +78,7 @@ function Uri.parse(text: string): Uri
 
    -- Hack for windows paths
    -- TODO - reconsider above logic
-   if util.get_platform() == "windows" and parsed.path:starts_with("/") then
+   if util.get_platform() == "windows" and util.string_starts_with(parsed.path, "/") then
       parsed.path = parsed.path:sub(2)
    end
 

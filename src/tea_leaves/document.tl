@@ -7,6 +7,7 @@ local LspReaderWriter <const> = require("tea_leaves.lsp_reader_writer")
 local class <const> = require("tea_leaves.class")
 local asserts <const> = require("tea_leaves.asserts")
 local tracing <const> = require("tea_leaves.tracing")
+local util <const> = require("tea_leaves.util")
 
 local tl <const> = require("tl")
 
@@ -496,7 +497,7 @@ end
 
 function Document:_get_content_lines(): {string}
    if self._content_lines == nil then
-      self._content_lines = self._content:split("\n")
+      self._content_lines = util.string_split(self._content, "\n")
    end
    return self._content_lines
 end
