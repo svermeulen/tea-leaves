@@ -4,6 +4,9 @@ local ServerState <const> = require("tea_leaves.server_state")
 local Uri <const> = require("tea_leaves.uri")
 local lsp <const> = require("tea_leaves.lsp")
 local LspReaderWriter <const> = require("tea_leaves.lsp_reader_writer")
+local class <const> = require("tea_leaves.class")
+local asserts <const> = require("tea_leaves.asserts")
+local tracing <const> = require("tea_leaves.tracing")
 
 local tl <const> = require("tl")
 
@@ -44,8 +47,8 @@ local record Document
 end
 
 function Document:__init(uri: Uri, content: string, version: integer, lsp_reader_writer: LspReaderWriter, server_state: ServerState)
-   sv.assert.is_not_nil(lsp_reader_writer)
-   sv.assert.is_not_nil(server_state)
+   asserts.is_not_nil(lsp_reader_writer)
+   asserts.is_not_nil(server_state)
 
    self._uri = uri
    self._cache = {}
@@ -136,7 +139,7 @@ function Document:get_result(): tl.Result, boolean
    local found_errors = #errs > 0
    local cache = self._cache
    if not cache.result then
-      sv.tracing.info(_module_name, "Type checking document '{}'", {self._uri.path})
+      tracing.info(_module_name, "Type checking document '{}'", {self._uri.path})
       cache.result = type_check(ast, {
          lax = is_lua(self._uri.path),
          filename = self._uri.path,
@@ -165,11 +168,11 @@ end
 
 function Document:clear_cache()
    self._cache = {}
-   sv.tracing.debug(_module_name, "Cleared cache for document {}", {self._uri})
+   tracing.debug(_module_name, "Cleared cache for document {}", {self._uri})
 end
 
 function Document:update_text(text: string, version: integer)
-   sv.tracing.debug(_module_name, "document update_text called (version {})", {version})
+   tracing.debug(_module_name, "document update_text called (version {})", {version})
 
    if not version or not self._version or self._version < version then
       self:clear_cache()
@@ -236,7 +239,7 @@ local function insert_errs(fname: string, diags: {lsp.Diagnostic}, tks: {Token},
 end
 
 function Document:publish_diagnostics(uri: string, diagnostics: {lsp.Diagnostic}, version: number)
-   sv.tracing.info(_module_name, "publishing diagnostics for {}...", {self._uri})
+   tracing.info(_module_name, "publishing diagnostics for {}...", {self._uri})
    self._lsp_reader_writer:send_rpc_notification("textDocument/publishDiagnostics", {
       uri = uri,
       diagnostics = diagnostics,
@@ -317,9 +320,9 @@ function Document:get_type_info_for_symbol(identifier:string, where: lsp.Positio
    end
 
    if result == nil then
-      sv.tracing.warning(_module_name, "Failed to find type id for identifier '{}'.  Available symbols: Locals: {}.  Globals: {}", {identifier, symbols, tr.globals})
+      tracing.warning(_module_name, "Failed to find type id for identifier '{}'.  Available symbols: Locals: {}.  Globals: {}", {identifier, symbols, tr.globals})
    else
-      sv.tracing.debug(_module_name, "Successfully found type id for given identifier '{}'", {identifier})
+      tracing.debug(_module_name, "Successfully found type id for given identifier '{}'", {identifier})
    end
 
    return result
@@ -333,18 +336,18 @@ function Document:type_information_for_token(token: Token): tl.TypeInfo
    local local_type_info = tr.types[type_id]
 
    if local_type_info then
-      sv.tracing.trace(_module_name, "Successfully found type info by raw token in local scope", {})
+      tracing.trace(_module_name, "Successfully found type info by raw token in local scope", {})
       return local_type_info
    end
 
    local global_type_info = tr.types[tr.globals[token.tk]]
 
    if global_type_info then
-      sv.tracing.trace(_module_name, "Successfully found type info by raw token in globals table", {})
+      tracing.trace(_module_name, "Successfully found type info by raw token in globals table", {})
       return global_type_info
    end
 
-   sv.tracing.warning(_module_name, "Failed to find type info at given position", {})
+   tracing.warning(_module_name, "Failed to find type info at given position", {})
    return nil
 end
 
@@ -353,48 +356,48 @@ function Document:type_information_at(where: lsp.Position): tl.TypeInfo
    local file_info = tr.by_pos[self._uri.path]
 
    if file_info == nil then
-      sv.tracing.warning(_module_name, "Could not find file info for path '{}'", {self._uri.path})
+      tracing.warning(_module_name, "Could not find file info for path '{}'", {self._uri.path})
       return nil
    end
 
    local line_info = file_info[where.line]
 
    if line_info == nil then
-      sv.tracing.warning(_module_name, "Could not find line info for file '{}' at line '{}'", {self._uri.path, where.line})
+      tracing.warning(_module_name, "Could not find line info for file '{}' at line '{}'", {self._uri.path, where.line})
       return nil
    end
 
-   sv.tracing.trace(_module_name, "Found line info: {}", {line_info})
+   tracing.trace(_module_name, "Found line info: {}", {line_info})
    -- I don't know why we have to check character, character-1, and character+1 here
    -- TODO - figure out why line_info and where.character are off by one sometimes
    local type_id = line_info[where.character] or line_info[where.character-1] or line_info[where.character+1]
 
    if type_id == nil then
-      sv.tracing.warning(_module_name, "Could not find type id for file '{}' at position:\n{}\nLine info:{}", {self._uri.path, where, line_info})
+      tracing.warning(_module_name, "Could not find type id for file '{}' at position:\n{}\nLine info:{}", {self._uri.path, where, line_info})
       return nil
    end
 
-   sv.tracing.trace(_module_name, "Successfully found type id '{}'", {type_id})
+   tracing.trace(_module_name, "Successfully found type id '{}'", {type_id})
 
    local type_info = tr.types[type_id]
 
    if type_info == nil then
-      sv.tracing.warning(_module_name, "Could not find type info for type id '{}'", {type_id})
+      tracing.warning(_module_name, "Could not find type info for type id '{}'", {type_id})
       return nil
    end
 
-   sv.tracing.trace(_module_name, "Successfully found type info: {}", {type_info})
+   tracing.trace(_module_name, "Successfully found type info: {}", {type_info})
 
    if type_info.str == "string" then
       -- TODO - why is this necessary in order to get string deref vars?
-      sv.tracing.trace(_module_name, "Hackily changed type info to string as a special case", {})
+      tracing.trace(_module_name, "Hackily changed type info to string as a special case", {})
       return (self._server_state:get_env().globals["string"] as {string:tl.TypeInfo})["t"]
    end
 
    local canonical_type_info = tr.types[type_info.ref]
 
    if canonical_type_info ~= nil then
-      sv.tracing.trace(_module_name, "Successfully found type info from ref field: {}", {canonical_type_info})
+      tracing.trace(_module_name, "Successfully found type info from ref field: {}", {canonical_type_info})
       return canonical_type_info
    end
 
@@ -510,7 +513,7 @@ function Document:token_at(where: lsp.Position): Token
    return get_token_at(self:get_tokens(), where.line + 1, where.character + 1)
 end
 
-sv.class.setup(Document, "Document", {
+class.setup(Document, "Document", {
    getters =  {
       uri = function(self:Document):Uri
          return self._uri

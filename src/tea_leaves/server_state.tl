@@ -1,11 +1,15 @@
 local _module_name = "server_state"
 
 -- <imports>
+local util <const> = require("tea_leaves.util")
+local asserts <const> = require("tea_leaves.asserts")
 local lsp <const> = require("tea_leaves.lsp")
 local Path <const> = require("sv.misc.path")
 local lfs <const> = require("lfs")
 local TealProjectConfig = require("tea_leaves.teal_project_config")
 local tl <const> = require("tl")
+local tracing <const> = require("tea_leaves.tracing")
+local class <const> = require("tea_leaves.class")
 
 local record ServerState
    capabilities:{string:any}
@@ -44,7 +48,7 @@ local capabilities = {
 }
 
 function ServerState:_validate_config(c:TealProjectConfig)
-   sv.assert.that(type(c) == "table", "Expected table, got {}", type(c))
+   asserts.that(type(c) == "table", "Expected table, got {}", type(c))
 
    local function sort_in_place<Value>(t: {Value}, fn: function(Value, Value): boolean): {Value}
       table.sort(t, fn)
@@ -188,16 +192,16 @@ function ServerState:_validate_config(c:TealProjectConfig)
    verify_warnings("disable_warnings")
    verify_warnings("warning_error")
 
-   sv.assert.that(#errs == 0, "Found {} errors and {} warnings in config:\n{}\n{}", #errs, #warnings, errs, warnings)
+   asserts.that(#errs == 0, "Found {} errors and {} warnings in config:\n{}\n{}", #errs, #warnings, errs, warnings)
 
    if #warnings > 0 then
-      sv.tracing.warning(_module_name, "Found {} warnings in config:\n{}", {#warnings, warnings})
+      tracing.warning(_module_name, "Found {} warnings in config:\n{}", {#warnings, warnings})
    end
 end
 
 function ServerState:_load_config(root_dir:Path):TealProjectConfig
    local config_path = root_dir:join("tlconfig.lua")
-   sv.assert.that(config_path:exists())
+   asserts.that(config_path:exists())
 
    local success, result = pcall(dofile, config_path.value)
 
@@ -207,30 +211,30 @@ function ServerState:_load_config(root_dir:Path):TealProjectConfig
       return config
    end
 
-   sv.assert.fail("Failed to parse tlconfig: {}", result)
+   asserts.fail("Failed to parse tlconfig: {}", result)
 end
 
 function ServerState:set_env(env:tl.Env)
-   sv.assert.is_not_nil(env)
+   asserts.is_not_nil(env)
    self._env = env
 end
 
 function ServerState:get_env(): tl.Env
-   sv.assert.is_not_nil(self._env)
+   asserts.is_not_nil(self._env)
    return self._env
 end
 
 function ServerState:initialize(root_dir:Path)
-   sv.assert.that(not self._has_initialized)
+   asserts.that(not self._has_initialized)
    self._has_initialized = true
 
    self._teal_project_root_dir = root_dir
-   sv.assert.that(lfs.chdir(root_dir.value), "unable to chdir into {}", root_dir.value)
+   asserts.that(lfs.chdir(root_dir.value), "unable to chdir into {}", root_dir.value)
 
    self._config = self:_load_config(root_dir)
 end
 
-sv.class.setup(ServerState, "ServerState", {
+class.setup(ServerState, "ServerState", {
    getters = {
       capabilities = function():{string:any}
          return capabilities

@@ -38,6 +38,7 @@ build = {
       ["tea_leaves.tl_helper"] = "gen/tea_leaves/tl_helper.lua",
       ["tea_leaves.trace_stream"] = "gen/tea_leaves/trace_stream.lua",
       ["tea_leaves.uri"] = "gen/tea_leaves/uri.lua",
+      ["tea_leaves.util"] = "gen/tea_leaves/util.lua",
    },
    install = {
      bin = {

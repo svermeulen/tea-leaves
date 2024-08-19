@@ -2,11 +2,15 @@ local _module_name = "env_updater"
 
 -- <imports>
 local DocumentManager <const> = require("tea_leaves.document_manager")
-local lusc <const> = require("sv.misc.lusc")
+local lusc <const> = require("lusc")
 local ServerState <const> = require("tea_leaves.server_state")
 local tl <const> = require("tl")
 local TealProjectConfig = require("tea_leaves.teal_project_config")
 local uv <const> = require("luv")
+local util <const> = require("tea_leaves.util")
+local asserts <const> = require("tea_leaves.asserts")
+local tracing <const> = require("tea_leaves.tracing")
+local class <const> = require("tea_leaves.class")
 
 local init_path <const> = package.path
 local init_cpath <const> = package.cpath
@@ -22,7 +26,7 @@ local record EnvUpdater
 end
 
 function EnvUpdater:__init(server_state: ServerState, root_nursery:lusc.Nursery, document_manager: DocumentManager)
-   sv.assert.is_not_nil(document_manager)
+   asserts.is_not_nil(document_manager)
 
    self._change_detected = lusc.new_sticky_event()
    self._server_state = server_state
@@ -98,7 +102,7 @@ end
 
 function EnvUpdater:_generate_env(): tl.Env
    local config = self._server_state.config
-   sv.assert.is_not_nil(config)
+   asserts.is_not_nil(config)
 
    -- applying the config to the env adds to package.path
    -- so lets reset them before doing that
@@ -108,7 +112,7 @@ function EnvUpdater:_generate_env(): tl.Env
    local env, errs = self:_init_env_from_config(config)
 
    if errs ~= nil and #errs > 0 then
-      sv.tracing.debug(_module_name, "Loaded env with errors:\n{}", {errs})
+      tracing.debug(_module_name, "Loaded env with errors:\n{}", {errs})
    end
 
    return env
@@ -127,20 +131,20 @@ function EnvUpdater:_update_env_on_changes()
       while true do
          lusc.await_sleep(required_delay_without_saves_sec)
          if self._change_detected.is_set then
-            sv.tracing.debug(_module_name, "Detected consecutive change events, waiting again...", {})
+            tracing.debug(_module_name, "Detected consecutive change events, waiting again...", {})
             self._change_detected:unset()
          else
-            sv.tracing.debug(_module_name, "Successfully waited for buffer time. Now updating env...", {})
+            tracing.debug(_module_name, "Successfully waited for buffer time. Now updating env...", {})
             break
          end
       end
 
-      sv.tracing.debug(_module_name, "Now updating env...", {})
+      tracing.debug(_module_name, "Now updating env...", {})
       local start_time = uv.hrtime()
       local env = self:_generate_env()
       self._server_state:set_env(env)
       local elapsed_time_ms = (uv.hrtime() - start_time) / 1e6
-      sv.tracing.debug(_module_name, "Completed env update in {} ms", {elapsed_time_ms})
+      tracing.debug(_module_name, "Completed env update in {} ms", {elapsed_time_ms})
 
       for _, doc in pairs(self._document_manager.docs) do
          doc:clear_cache()
@@ -162,5 +166,5 @@ function EnvUpdater:initialize()
    end)
 end
 
-sv.class.setup(EnvUpdater, "EnvUpdater")
+class.setup(EnvUpdater, "EnvUpdater")
 return EnvUpdater

@@ -1,4 +1,7 @@
 
+local util <const> = require("tea_leaves.util")
+local asserts <const> = require("tea_leaves.asserts")
+
 local record args_parser
    enum LogNameMethod
       "by_date"
@@ -28,7 +31,7 @@ function args_parser.parse_args():args_parser.CommandLineArgs
    if log_name_method == nil then
       log_name_method = "by_date"
    else
-      sv.assert.that(log_name_method == "by_date" or log_name_method == "by_proj_path")
+      asserts.that(log_name_method == "by_date" or log_name_method == "by_proj_path")
    end
 
    local args:args_parser.CommandLineArgs = {

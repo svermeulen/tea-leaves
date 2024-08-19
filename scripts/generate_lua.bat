@@ -20,3 +20,4 @@ call C:\svkj1\scripts\run_teal.bat gen %~dp0\..\src\tea_leaves\teal_project_conf
 call C:\svkj1\scripts\run_teal.bat gen %~dp0\..\src\tea_leaves\tl_helper.tl -o %~dp0\..\gen\tea_leaves\tl_helper.lua
 call C:\svkj1\scripts\run_teal.bat gen %~dp0\..\src\tea_leaves\trace_stream.tl -o %~dp0\..\gen\tea_leaves\trace_stream.lua
 call C:\svkj1\scripts\run_teal.bat gen %~dp0\..\src\tea_leaves\uri.tl -o %~dp0\..\gen\tea_leaves\uri.lua
+call C:\svkj1\scripts\run_teal.bat gen %~dp0\..\src\tea_leaves\util.tl -o %~dp0\..\gen\tea_leaves\util.lua

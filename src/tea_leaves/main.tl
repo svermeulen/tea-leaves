@@ -7,7 +7,7 @@ local EnvUpdater <const> = require("tea_leaves.env_updater")
 local DocumentManager <const> = require("tea_leaves.document_manager")
 local ServerState <const> = require("tea_leaves.server_state")
 local LspEventsManager <const> = require("tea_leaves.lsp_events_manager")
-local lusc <const> = require("sv.misc.lusc")
+local lusc <const> = require("lusc")
 local jit <const> = require("jit")
 local uv <const> = require("luv")
 local TraceStream <const> = require("tea_leaves.trace_stream")
@@ -17,18 +17,19 @@ local TlHelper <const> = require("tea_leaves.tl_helper")
 local StdinReader <const> = require("tea_leaves.stdin_reader")
 local LspReaderWriter <const> = require("tea_leaves.lsp_reader_writer")
 local IDisposable <const> = require("sv.misc.disposable")
+local tracing <const> = require("tea_leaves.tracing")
 
 local function init_logging(verbose:boolean):TraceStream
    local trace_stream = TraceStream()
    trace_stream:initialize()
 
-   sv.tracing.add_stream(sv.func.partial2(trace_stream.log_entry, trace_stream))
+   tracing.add_stream(sv.func.partial2(trace_stream.log_entry, trace_stream))
 
    if verbose then
-      sv.tracing.set_min_level("TRACE")
-      sv.tracing.set_trace_module_patterns({".*"})
+      tracing.set_min_level("TRACE")
+      tracing.set_trace_module_patterns({".*"})
    else
-      sv.tracing.set_min_level("WARNING")
+      tracing.set_min_level("WARNING")
    end
    return trace_stream
 end
@@ -38,15 +39,15 @@ local function main()
 
    local trace_stream = init_logging(args.verbose)
 
-   sv.tracing.info(_module_name, "Started new instance tea-leaves. Version: '{version}'.  JIT version: {jit_version}", {_VERSION, jit.version})
-   sv.tracing.info(_module_name, "Received command line args: '{}'", {args})
-   sv.tracing.info(_module_name, "CWD = {cwd}", {uv.cwd()})
-   sv.tracing.info(_module_name, "Starting tea-leaves server...")
+   tracing.info(_module_name, "Started new instance tea-leaves. Version: '{version}'.  JIT version: {jit_version}", {_VERSION, jit.version})
+   tracing.info(_module_name, "Received command line args: '{}'", {args})
+   tracing.info(_module_name, "CWD = {cwd}", {uv.cwd()})
+   tracing.info(_module_name, "Starting tea-leaves server...")
 
    local disposables:{IDisposable}
 
    local function initialize()
-      sv.tracing.info(_module_name, "Constructing object graph...", {})
+      tracing.info(_module_name, "Constructing object graph...", {})
 
       local _tl_helper = TlHelper()
       local root_nursery = lusc.get_root_nursery()
@@ -58,7 +59,7 @@ local function main()
       local env_updater = EnvUpdater(server_state, root_nursery, document_manager)
       local misc_handlers = MiscHandlers(lsp_events_manager, lsp_reader_writer, server_state, document_manager, trace_stream, args, env_updater)
 
-      sv.tracing.info(_module_name, "Initializing...", {})
+      tracing.info(_module_name, "Initializing...", {})
       stdin_reader:initialize()
       lsp_reader_writer:initialize()
       lsp_events_manager:initialize()
@@ -74,7 +75,7 @@ local function main()
    end
 
    local function dispose()
-      sv.tracing.info(_module_name, "Disposing...", {})
+      tracing.info(_module_name, "Disposing...", {})
 
       if disposables then
          for disposable in sv.itr(disposables) do
@@ -89,16 +90,16 @@ local function main()
 
    local lusc_timer = uv.new_timer()
    lusc_timer:start(0, 0, function()
-      sv.tracing.trace(_module_name, "Received entry point call from luv")
+      tracing.trace(_module_name, "Received entry point call from luv")
 
       lusc.start {
          -- TODO - consider turning this off by default
          generate_debug_names = true,
          on_completed = function(err:lusc.ErrorGroup)
             if err ~= nil then
-               sv.tracing.error(_module_name, "Received on_completed request with error:\n{error}", {err})
+               tracing.error(_module_name, "Received on_completed request with error:\n{error}", {err})
             else
-               sv.tracing.info(_module_name, "Received on_completed request")
+               tracing.info(_module_name, "Received on_completed request")
             end
 
             dispose()
@@ -106,7 +107,7 @@ local function main()
       }
 
       lusc.schedule(function()
-         sv.tracing.trace(_module_name, "Received entry point call from lusc luv")
+         tracing.trace(_module_name, "Received entry point call from lusc luv")
          initialize()
       end)
 
@@ -114,15 +115,15 @@ local function main()
    end)
 
    local function run_luv():nil
-      sv.tracing.debug(_module_name, "Running luv event loop...")
+      tracing.debug(_module_name, "Running luv event loop...")
       uv.run()
-      sv.tracing.debug(_module_name, "Luv event loop stopped")
+      tracing.debug(_module_name, "Luv event loop stopped")
       lusc_timer:close()
 
       uv.walk(function(handle:uv.Handle)
          if not handle:is_closing() then
             local handle_type = handle:get_type()
-            sv.tracing.warning(_module_name, "Found unclosed handle of type '{handle_type}', closing it.", {handle_type})
+            tracing.warning(_module_name, "Found unclosed handle of type '{handle_type}', closing it.", {handle_type})
             handle:close()
          end
       end)
@@ -130,16 +131,16 @@ local function main()
       uv.run('nowait')
 
       if uv.loop_close() then
-         sv.tracing.info(_module_name, "luv event loop closed gracefully")
+         tracing.info(_module_name, "luv event loop closed gracefully")
       else
-         sv.tracing.warning(_module_name, "Could not close luv event loop gracefully")
+         tracing.warning(_module_name, "Could not close luv event loop gracefully")
       end
    end
 
    sv.try {
       action = run_luv,
       catch = function(err:string):nil
-         sv.tracing.error(_module_name, "Error: {error}", {err})
+         tracing.error(_module_name, "Error: {error}", {err})
          error(err)
       end,
    }

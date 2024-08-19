@@ -1,8 +1,12 @@
 local _module_name = "stdin_reader"
 
 -- <imports>
-local lusc <const> = require("sv.misc.lusc")
+local util <const> = require("tea_leaves.util")
+local lusc <const> = require("lusc")
+local asserts <const> = require("tea_leaves.asserts")
 local uv <const> = require("luv")
+local tracing <const> = require("tea_leaves.tracing")
+local class <const> = require("tea_leaves.class")
 
 local record StdinReader
    _stdin: uv.Pipe
@@ -21,9 +25,9 @@ end
 
 function StdinReader:initialize()
    self._stdin = uv.new_pipe(false)
-   sv.assert.that(self._stdin ~= nil)
+   asserts.that(self._stdin ~= nil)
    assert(self._stdin:open(0))
-   sv.tracing.debug(_module_name, "Opened pipe for stdin.  Now waiting to receive data...")
+   tracing.debug(_module_name, "Opened pipe for stdin.  Now waiting to receive data...")
 
    assert(self._stdin:read_start(function(err:string, chunk:string)
       if self._disposed then
@@ -31,7 +35,7 @@ function StdinReader:initialize()
       end
       assert(not err, err)
       if chunk then
-         sv.tracing.debug(_module_name, "Received chunk '{}' from stdin", {chunk})
+         tracing.debug(_module_name, "Received chunk '{}' from stdin", {chunk})
 
          self._buffer = self._buffer .. chunk
          self._chunk_added_event:set()
@@ -40,42 +44,42 @@ function StdinReader:initialize()
 end
 
 function StdinReader:dispose()
-   sv.assert.that(not self._disposed)
+   asserts.that(not self._disposed)
    self._disposed = true
    assert(self._stdin:read_stop())
    self._stdin:close()
-   sv.tracing.debug(_module_name, "Closed pipe for stdin")
+   tracing.debug(_module_name, "Closed pipe for stdin")
 end
 
 function StdinReader:read_line():string
-   sv.assert.that(not self._disposed)
-   sv.tracing.trace(_module_name, "Attempting to read line from stdin...")
-   sv.assert.that(lusc.is_available())
+   asserts.that(not self._disposed)
+   tracing.trace(_module_name, "Attempting to read line from stdin...")
+   asserts.that(lusc.is_available())
 
    while true do
-      sv.tracing.trace(_module_name, "calling self._buffer:find", {})
+      tracing.trace(_module_name, "calling self._buffer:find", {})
       local i = self._buffer:find("\n")
 
       if i then
-         sv.tracing.trace(_module_name, "Buffer before extraction: '{buffer}'", {self._buffer})
+         tracing.trace(_module_name, "Buffer before extraction: '{buffer}'", {self._buffer})
          local line = self._buffer:sub(1, i - 1)
          self._buffer = self._buffer:sub(i + 1)
          line = line:gsub("\r$", "")
-         sv.tracing.trace(_module_name, "Parsed line from buffer.  Line: '{line}'.  Buffer is now: '{buffer}'", {line, self._buffer})
+         tracing.trace(_module_name, "Parsed line from buffer.  Line: '{line}'.  Buffer is now: '{buffer}'", {line, self._buffer})
          return line
       else
-         sv.tracing.trace(_module_name, "got false back.  Waiting for more data...", {})
+         tracing.trace(_module_name, "got false back.  Waiting for more data...", {})
          self._chunk_added_event:await()
-         sv.tracing.debug(_module_name, "received more data", {})
+         tracing.debug(_module_name, "received more data", {})
       end
    end
 end
 
 function StdinReader:read(len:integer):string
-   sv.assert.that(not self._disposed)
-   sv.tracing.trace(_module_name, "Attempting to read {len} characters from stdin...", {len})
+   asserts.that(not self._disposed)
+   tracing.trace(_module_name, "Attempting to read {len} characters from stdin...", {len})
 
-   sv.assert.that(lusc.is_available())
+   asserts.that(lusc.is_available())
 
    while true do
       if #self._buffer >= len then
@@ -88,7 +92,7 @@ function StdinReader:read(len:integer):string
    end
 end
 
-sv.class.setup(StdinReader, "StdinReader", {
+class.setup(StdinReader, "StdinReader", {
    nilable_members = { '_stdin' }
 })
 

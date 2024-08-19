@@ -12,6 +12,10 @@ local Uri <const> = require("tea_leaves.uri")
 local lsp <const> = require("tea_leaves.lsp")
 local LspEventsManager <const> = require("tea_leaves.lsp_events_manager")
 local uv <const> = require("luv")
+local util <const> = require("tea_leaves.util")
+local asserts <const> = require("tea_leaves.asserts")
+local tracing <const> = require("tea_leaves.tracing")
+local class <const> = require("tea_leaves.class")
 
 local record MiscHandlers
    _env_updater: EnvUpdater
@@ -27,7 +31,7 @@ local record MiscHandlers
 end
 
 function MiscHandlers:__init(lsp_events_manager:LspEventsManager, lsp_reader_writer: LspReaderWriter, server_state: ServerState, document_manager: DocumentManager, trace_stream: TraceStream, args:args_parser.CommandLineArgs, env_updater: EnvUpdater)
-   sv.assert.is_not_nil(env_updater)
+   asserts.is_not_nil(env_updater)
 
    self._document_manager = document_manager
    self._server_state = server_state
@@ -40,7 +44,7 @@ function MiscHandlers:__init(lsp_events_manager:LspEventsManager, lsp_reader_wri
 end
 
 function MiscHandlers:_on_initialize(params:lsp.Method.Params, id:integer):nil
-   sv.assert.that(not self._has_handled_initialize)
+   asserts.that(not self._has_handled_initialize)
    self._has_handled_initialize= true
 
    local root_dir_str:string
@@ -61,12 +65,12 @@ function MiscHandlers:_on_initialize(params:lsp.Method.Params, id:integer):nil
       self._trace_stream:rename_output_file(new_log_name)
    end
 
-   sv.tracing.info(_module_name, "Received root dir: '{}'", {root_path.value})
+   tracing.info(_module_name, "Received root dir: '{}'", {root_path.value})
 
    self._server_state:initialize(root_path)
    self._env_updater:initialize()
 
-   sv.tracing.debug(_module_name, "Sending initialize response message...", {})
+   tracing.debug(_module_name, "Sending initialize response message...", {})
 
    self._lsp_reader_writer:send_rpc(id, {
       capabilities = self._server_state.capabilities,
@@ -76,11 +80,11 @@ function MiscHandlers:_on_initialize(params:lsp.Method.Params, id:integer):nil
       },
    })
 
-   sv.tracing.debug(_module_name, "Initialize response message sent", {})
+   tracing.debug(_module_name, "Initialize response message sent", {})
 end
 
 function MiscHandlers:_on_initialized():nil
-   sv.tracing.debug(_module_name, "Received 'initialized' notification", {})
+   tracing.debug(_module_name, "Received 'initialized' notification", {})
 end
 
 function MiscHandlers:_on_did_open(params:lsp.Method.Params):nil
@@ -99,14 +103,14 @@ function MiscHandlers:_on_did_save(params:lsp.Method.Params):nil
    local td <const> = params.textDocument as lsp.TextDocument
    local doc <const> = self._document_manager:get(Uri.parse(td.uri))
    if not doc then
-      sv.tracing.warning(_module_name, "Unable to find document: {}", {td.uri})
+      tracing.warning(_module_name, "Unable to find document: {}", {td.uri})
       return
    end
    doc:update_text(params.text as string, td.version)
    -- Don't bother calling process_and_publish_results here because this
    -- will happen anyway after the full env update
 
-   sv.tracing.debug(_module_name, "detected document file saved - enqueuing full env update", {})
+   tracing.debug(_module_name, "detected document file saved - enqueuing full env update", {})
    self._env_updater:schedule_env_update()
 end
 
@@ -114,7 +118,7 @@ function MiscHandlers:_on_did_change(params:lsp.Method.Params):nil
    local td <const> = params.textDocument as lsp.TextDocument
    local doc <const> = self._document_manager:get(Uri.parse(td.uri))
    if not doc then
-      sv.tracing.warning(_module_name, "Unable to find document: {}", {td.uri})
+      tracing.warning(_module_name, "Unable to find document: {}", {td.uri})
       return
    end
    local changes <const> = params.contentChanges as {lsp.TextDocumentContentChangeEvent}
@@ -128,7 +132,7 @@ function MiscHandlers:_on_completion(params:lsp.Method.Params, id:integer):nil
    -- triggerKind 1 = manual invocation (do we need to handle this?)
    -- triggerKind 3 = "Completion was re-triggered as the current completion list is incomplete."
    if context.triggerKind ~= 2 then
-      sv.tracing.warning(_module_name, "Ignoring completion request given kind: {}", {context.triggerKind})
+      tracing.warning(_module_name, "Ignoring completion request given kind: {}", {context.triggerKind})
       self._lsp_reader_writer:send_rpc(id, nil)
       return
    end
@@ -137,7 +141,7 @@ function MiscHandlers:_on_completion(params:lsp.Method.Params, id:integer):nil
    local doc <const> = self._document_manager:get(Uri.parse(td.uri))
 
    if not doc then
-      sv.tracing.warning(_module_name, "No doc found for completion request", {})
+      tracing.warning(_module_name, "No doc found for completion request", {})
       self._lsp_reader_writer:send_rpc(id, nil)
       return
    end
@@ -145,34 +149,34 @@ function MiscHandlers:_on_completion(params:lsp.Method.Params, id:integer):nil
    local pos = params.position as lsp.Position
    pos.character = pos.character - 2
 
-   sv.tracing.info(_module_name, "Received request for completion at position: {}", {pos})
+   tracing.info(_module_name, "Received request for completion at position: {}", {pos})
 
    local tk <const> = doc:token_at(pos)
 
    if not tk then
-      sv.tracing.warning(_module_name, "Could not find token at given position", {})
+      tracing.warning(_module_name, "Could not find token at given position", {})
       self._lsp_reader_writer:send_rpc(id, nil)
       return
    end
 
    local token_pos = lsp.position(tk.y, tk.x)
-   sv.tracing.trace(_module_name, "Found actual token '{}' at position: '{}'", {tk.tk, token_pos})
+   tracing.trace(_module_name, "Found actual token '{}' at position: '{}'", {tk.tk, token_pos})
 
    local type_info = doc:type_information_at(token_pos)
    local items:{any} = { }
 
    if not type_info then
-      sv.tracing.trace(_module_name, "No type information found at calculated token position '{}'.  Attempting to get type information by raw token instead.", {token_pos})
+      tracing.trace(_module_name, "No type information found at calculated token position '{}'.  Attempting to get type information by raw token instead.", {token_pos})
 
       type_info = doc:type_information_for_token(tk)
 
       if not type_info then
-         sv.tracing.warning(_module_name, "Also failed to find type type_info based on token", {})
+         tracing.warning(_module_name, "Also failed to find type type_info based on token", {})
       end
    end
 
    if type_info then
-      sv.tracing.trace(_module_name, "Successfully found type type_info '{}'", {type_info})
+      tracing.trace(_module_name, "Successfully found type type_info '{}'", {type_info})
 
       if type_info.ref then
          local tr, _ = doc:get_type_report()
@@ -182,7 +186,7 @@ function MiscHandlers:_on_completion(params:lsp.Method.Params, id:integer):nil
                table.insert(items, {label = key})
             end
          else
-            sv.tracing.warning(_module_name, "Unable to get fields for ref type", {})
+            tracing.warning(_module_name, "Unable to get fields for ref type", {})
          end
       else
          if type_info.fields then
@@ -190,7 +194,7 @@ function MiscHandlers:_on_completion(params:lsp.Method.Params, id:integer):nil
                table.insert(items, {label = key})
             end
          else
-            sv.tracing.warning(_module_name, "Unable to get fields for type", {})
+            tracing.warning(_module_name, "Unable to get fields for type", {})
          end
       end
    end
@@ -210,14 +214,14 @@ function MiscHandlers:_on_definition(params:lsp.Method.Params, id:integer):nil
    local doc <const> = self._document_manager:get(Uri.parse(td.uri))
 
    if not doc then
-      sv.tracing.trace(_module_name, "[on_definition] No document found for given uri", {})
+      tracing.trace(_module_name, "[on_definition] No document found for given uri", {})
       return
    end
 
    local pos <const> = params.position as lsp.Position
    local tk <const> = doc:token_at(pos)
    if not tk then
-      sv.tracing.trace(_module_name, "[on_definition] No token found at given position", {})
+      tracing.trace(_module_name, "[on_definition] No token found at given position", {})
       self._lsp_reader_writer:send_rpc(id, nil)
       return
    end
@@ -230,7 +234,7 @@ function MiscHandlers:_on_definition(params:lsp.Method.Params, id:integer):nil
       return
    end
 
-   sv.tracing.trace(_module_name, "[on_definition] Found type info: {}", {info})
+   tracing.trace(_module_name, "[on_definition] Found type info: {}", {info})
 
    local file_uri: Uri
 
@@ -263,32 +267,32 @@ function MiscHandlers:_on_hover(params:lsp.Method.Params, id:integer):nil
    local doc <const> = self._document_manager:get(Uri.parse(td.uri))
 
    if not doc then
-      sv.tracing.warning(_module_name, "Failed to find document for given params", {})
+      tracing.warning(_module_name, "Failed to find document for given params", {})
       self._lsp_reader_writer:send_rpc(id, nil)
       return
    end
    local pos <const> = params.position as lsp.Position
 
-   sv.tracing.trace(_module_name, "Received request for hover at position: {}", {pos})
+   tracing.trace(_module_name, "Received request for hover at position: {}", {pos})
 
    local tk <const> = doc:token_at(pos)
    if not tk then
-      sv.tracing.warning(_module_name, "Could not find token at given position", {})
+      tracing.warning(_module_name, "Could not find token at given position", {})
       self._lsp_reader_writer:send_rpc(id, {
          contents = { " No info found " }
       })
       return
    end
    local token_pos = lsp.position(tk.y, tk.x)
-   sv.tracing.trace(_module_name, "Found actual token '{}' at position: '{}'", {tk.tk, token_pos})
+   tracing.trace(_module_name, "Found actual token '{}' at position: '{}'", {tk.tk, token_pos})
    local type_info = doc:type_information_at(token_pos)
    if not type_info then
-      sv.tracing.warning(_module_name, "No type information found at calculated token position.  Attempting to get type information by raw token instead.", {})
+      tracing.warning(_module_name, "No type information found at calculated token position.  Attempting to get type information by raw token instead.", {})
 
       type_info = doc:type_information_for_token(tk)
 
       if not type_info then
-         sv.tracing.warning(_module_name, "Also failed to find type info based on token", {})
+         tracing.warning(_module_name, "Also failed to find type info based on token", {})
          self._lsp_reader_writer:send_rpc(id, {
             contents = { tk.tk .. ":", " No type_info found " },
             range = {
@@ -300,7 +304,7 @@ function MiscHandlers:_on_hover(params:lsp.Method.Params, id:integer):nil
       end
    end
 
-   sv.tracing.trace(_module_name, "Successfully found type_info: {}", {type_info})
+   tracing.trace(_module_name, "Successfully found type_info: {}", {type_info})
 
    local type_str <const> = doc:show_type(type_info)
    self._lsp_reader_writer:send_rpc(id, {
@@ -328,7 +332,7 @@ function MiscHandlers:initialize()
    self:_add_handler("textDocument/hover", self._on_hover)
 end
 
-sv.class.setup(MiscHandlers, "MiscHandlers", {
+class.setup(MiscHandlers, "MiscHandlers", {
 })
 
 return MiscHandlers

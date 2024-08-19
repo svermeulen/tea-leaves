@@ -1,4 +1,6 @@
 
+local asserts <const> = require("tea_leaves.asserts")
+
 --[[
    uri spec:
 
@@ -94,7 +96,7 @@ end
 
 function Uri.path_from_uri(s: string): string
    local parsed <const> = Uri.parse(s)
-   sv.assert.that(parsed.scheme == "file", "uri " .. tostring(s) .. " is not a file")
+   asserts.that(parsed.scheme == "file", "uri " .. tostring(s) .. " is not a file")
    return parsed.path
 end
 
