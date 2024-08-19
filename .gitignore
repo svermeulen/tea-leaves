@@ -2,3 +2,6 @@
 /lua
 /lua_modules
 /.luarocks
+/luarocks.bat
+/lua.bat
+/luarocks_tree
