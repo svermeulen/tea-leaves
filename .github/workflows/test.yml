@@ -24,10 +24,18 @@ jobs:
         uses: leafo/gh-actions-luarocks@v4.0.0
 
       - name: Build
-        run: |
-          luarocks install luafilesystem
-          luarocks install tl
-          luarocks make --dev
+        run: scripts/setup_local_luarocks.sh
 
-      - name: Test
-        run: tlcheck src/tlcheck.tl
+      - name: Lint
+        run: scripts/lint_teal.sh
+
+      - name: Check for untracked or modified files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Error: Untracked or modified files found."
+            git status
+            exit 1
+          else
+            echo "No untracked or modified files."
+          fi
+
