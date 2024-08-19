@@ -19,6 +19,9 @@ rem Install project dependencies from the rockspec
 echo Installing project dependencies...
 call luarocks make --tree=!LUAROCKS_TREE!
 
+echo Installing tlcheck for linting...
+call luarocks install tlcheck --tree=!LUAROCKS_TREE!
+
 rem Confirm installations
 echo Installed LuaRocks packages:
 call luarocks list --tree=!LUAROCKS_TREE!

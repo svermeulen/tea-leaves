@@ -1,9 +1,12 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local assert = _tl_compat and _tl_compat.assert or assert; local io = _tl_compat and _tl_compat.io or io; local os = _tl_compat and _tl_compat.os or os; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string
+local util = require("tea_leaves.util")
+local asserts = require("tea_leaves.asserts")
 local Path = require("sv.misc.path")
 local TraceEntry = require("sv.misc.trace_entry")
 local platform_util = require("sv.misc.platform_util")
 local json = require("dkjson")
 local uv = require("luv")
+local class = require("tea_leaves.class")
 
 local TraceStream = {}
 
@@ -24,14 +27,14 @@ end
 
 local function _open_write_file(path)
    local file = io.open(path, "w+")
-   sv.assert.is_not_nil(file, "Could not open file '{}'", path)
+   asserts.is_not_nil(file, "Could not open file '{}'", path)
    file:setvbuf("line")
    return file
 end
 
 local function _open_write_file_append(path)
    local file = io.open(path, "a")
-   sv.assert.is_not_nil(file, "Could not open file '{}'", path)
+   asserts.is_not_nil(file, "Could not open file '{}'", path)
    file:setvbuf("line")
    return file
 end
@@ -82,20 +85,20 @@ function TraceStream:_choose_log_file_path()
 end
 
 function TraceStream:initialize()
-   sv.assert.that(not self._is_initializing)
+   asserts.that(not self._is_initializing)
    self._is_initializing = true
 
-   sv.assert.that(not self._has_initialized)
+   asserts.that(not self._has_initialized)
    self._has_initialized = true
 
-   sv.assert.is_nil(self._file_stream)
+   asserts.is_nil(self._file_stream)
 
    self._file_stream = _open_write_file(self.log_path.value)
    self._is_initializing = false
 end
 
 function TraceStream:_close_file()
-   sv.assert.is_not_nil(self._file_stream)
+   asserts.is_not_nil(self._file_stream)
    self._file_stream:close()
 end
 
@@ -116,14 +119,14 @@ function TraceStream:flush()
    end
 
    if self._file_stream ~= nil then
-      sv.assert.is_not_nil(self._file_stream)
+      asserts.is_not_nil(self._file_stream)
       self._file_stream:flush()
    end
 end
 
 function TraceStream:dispose()
-   sv.assert.that(not self._has_disposed)
-   sv.assert.that(not self._is_initializing)
+   asserts.that(not self._has_disposed)
+   asserts.that(not self._is_initializing)
 
    self._has_disposed = true
 
@@ -147,7 +150,7 @@ function TraceStream:log_entry(entry)
 
    local serializable_fields = {}
    for key, value in pairs(entry.fields) do
-      sv.assert.that(type(key) == "string")
+      asserts.that(type(key) == "string")
       local value_type = type(value)
 
       if value_type == "thread" then
@@ -160,13 +163,13 @@ function TraceStream:log_entry(entry)
          value = sv.inspect(value)
       else
 
-         sv.assert.that(value_type == "string" or value_type == "number" or value_type == "nil" or value_type == "boolean")
+         asserts.that(value_type == "string" or value_type == "number" or value_type == "nil" or value_type == "boolean")
       end
 
       serializable_fields[key] = value
    end
 
-   sv.assert.is_not_nil(self._file_stream)
+   asserts.is_not_nil(self._file_stream)
    local old_fields = entry.fields
    entry.fields = serializable_fields
 
@@ -182,13 +185,13 @@ function TraceStream:log_entry(entry)
    self._file_stream:flush()
 end
 
-sv.class.setup(TraceStream, "TraceStream", {
+class.setup(TraceStream, "TraceStream", {
    nilable_members = { "_file_stream", "_log_path" },
    getters = {
       log_path = function(self)
          if self._log_path == nil then
             self._log_path = self:_choose_log_file_path()
-            sv.assert.is_not_nil(self._log_path)
+            asserts.is_not_nil(self._log_path)
          end
          return self._log_path
       end,

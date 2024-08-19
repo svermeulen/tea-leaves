@@ -1,4 +1,6 @@
 local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string
+local asserts = require("tea_leaves.asserts")
+
 
 
 
@@ -94,7 +96,7 @@ end
 
 function Uri.path_from_uri(s)
    local parsed = Uri.parse(s)
-   sv.assert.that(parsed.scheme == "file", "uri " .. tostring(s) .. " is not a file")
+   asserts.that(parsed.scheme == "file", "uri " .. tostring(s) .. " is not a file")
    return parsed.path
 end
 

@@ -1,4 +1,7 @@
 
+local util = require("tea_leaves.util")
+local asserts = require("tea_leaves.asserts")
+
 local args_parser = {CommandLineArgs = {}, }
 
 
@@ -28,7 +31,7 @@ function args_parser.parse_args()
    if log_name_method == nil then
       log_name_method = "by_date"
    else
-      sv.assert.that(log_name_method == "by_date" or log_name_method == "by_proj_path")
+      asserts.that(log_name_method == "by_date" or log_name_method == "by_proj_path")
    end
 
    local args = {

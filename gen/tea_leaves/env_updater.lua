@@ -2,11 +2,15 @@ local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 th
 
 
 local DocumentManager = require("tea_leaves.document_manager")
-local lusc = require("sv.misc.lusc")
+local lusc = require("lusc")
 local ServerState = require("tea_leaves.server_state")
 local tl = require("tl")
 local TealProjectConfig = require("tea_leaves.teal_project_config")
 local uv = require("luv")
+local util = require("tea_leaves.util")
+local asserts = require("tea_leaves.asserts")
+local tracing = require("tea_leaves.tracing")
+local class = require("tea_leaves.class")
 
 local init_path = package.path
 local init_cpath = package.cpath
@@ -22,7 +26,7 @@ local EnvUpdater = {}
 
 
 function EnvUpdater:__init(server_state, root_nursery, document_manager)
-   sv.assert.is_not_nil(document_manager)
+   asserts.is_not_nil(document_manager)
 
    self._change_detected = lusc.new_sticky_event()
    self._server_state = server_state
@@ -98,7 +102,7 @@ end
 
 function EnvUpdater:_generate_env()
    local config = self._server_state.config
-   sv.assert.is_not_nil(config)
+   asserts.is_not_nil(config)
 
 
 
@@ -108,7 +112,7 @@ function EnvUpdater:_generate_env()
    local env, errs = self:_init_env_from_config(config)
 
    if errs ~= nil and #errs > 0 then
-      sv.tracing.debug(_module_name, "Loaded env with errors:\n{}", { errs })
+      tracing.debug(_module_name, "Loaded env with errors:\n{}", { errs })
    end
 
    return env
@@ -127,20 +131,20 @@ function EnvUpdater:_update_env_on_changes()
       while true do
          lusc.await_sleep(required_delay_without_saves_sec)
          if self._change_detected.is_set then
-            sv.tracing.debug(_module_name, "Detected consecutive change events, waiting again...", {})
+            tracing.debug(_module_name, "Detected consecutive change events, waiting again...", {})
             self._change_detected:unset()
          else
-            sv.tracing.debug(_module_name, "Successfully waited for buffer time. Now updating env...", {})
+            tracing.debug(_module_name, "Successfully waited for buffer time. Now updating env...", {})
             break
          end
       end
 
-      sv.tracing.debug(_module_name, "Now updating env...", {})
+      tracing.debug(_module_name, "Now updating env...", {})
       local start_time = uv.hrtime()
       local env = self:_generate_env()
       self._server_state:set_env(env)
       local elapsed_time_ms = (uv.hrtime() - start_time) / 1e6
-      sv.tracing.debug(_module_name, "Completed env update in {} ms", { elapsed_time_ms })
+      tracing.debug(_module_name, "Completed env update in {} ms", { elapsed_time_ms })
 
       for _, doc in pairs(self._document_manager.docs) do
          doc:clear_cache()
@@ -162,5 +166,5 @@ function EnvUpdater:initialize()
    end)
 end
 
-sv.class.setup(EnvUpdater, "EnvUpdater")
+class.setup(EnvUpdater, "EnvUpdater")
 return EnvUpdater

@@ -2,7 +2,11 @@ local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 th
 
 local lsp = require("tea_leaves.lsp")
 local LspReaderWriter = require("tea_leaves.lsp_reader_writer")
-local lusc = require("sv.misc.lusc")
+local lusc = require("lusc")
+local util = require("tea_leaves.util")
+local asserts = require("tea_leaves.asserts")
+local tracing = require("tea_leaves.tracing")
+local class = require("tea_leaves.class")
 
 local LspEventsManager = {}
 
@@ -14,8 +18,8 @@ local LspEventsManager = {}
 
 
 function LspEventsManager:__init(root_nursery, lsp_reader_writer)
-   sv.assert.is_not_nil(root_nursery)
-   sv.assert.is_not_nil(lsp_reader_writer)
+   asserts.is_not_nil(root_nursery)
+   asserts.is_not_nil(lsp_reader_writer)
 
    self._handlers = {}
    self._lsp_reader_writer = lsp_reader_writer
@@ -23,7 +27,7 @@ function LspEventsManager:__init(root_nursery, lsp_reader_writer)
 end
 
 function LspEventsManager:set_handler(method, handler)
-   sv.assert.that(self._handlers[method] == nil)
+   asserts.that(self._handlers[method] == nil)
    self._handlers[method] = handler
 end
 
@@ -37,25 +41,25 @@ function LspEventsManager:_trigger(method, params, id)
       debug.traceback)
 
       if ok then
-         sv.tracing.info(_module_name, "Successfully handled request '{}'", { method })
+         tracing.info(_module_name, "Successfully handled request '{}'", { method })
       else
-         sv.tracing.error(_module_name, "Error in handler for '{}': {}", { method, err })
+         tracing.error(_module_name, "Error in handler for '{}': {}", { method, err })
       end
    else
-      sv.tracing.warning(_module_name, "No handler found for event '{}'", { method })
+      tracing.warning(_module_name, "No handler found for event '{}'", { method })
    end
 end
 
 function LspEventsManager:_receive_initialize_request()
    local initialize_data = self._lsp_reader_writer:receive_rpc()
 
-   sv.assert.is_not_nil(initialize_data)
+   asserts.is_not_nil(initialize_data)
 
-   sv.assert.that(initialize_data.method ~= nil, "No method in initial request")
-   sv.assert.that(initialize_data.method == "initialize", "Initial method was not 'initialize'")
+   asserts.that(initialize_data.method ~= nil, "No method in initial request")
+   asserts.that(initialize_data.method == "initialize", "Initial method was not 'initialize'")
 
-   sv.tracing.debug(_module_name, "Received initialize request", {})
-   sv.tracing.trace(_module_name, "Initialize request data: {}", { initialize_data })
+   tracing.debug(_module_name, "Received initialize request", {})
+   tracing.trace(_module_name, "Initialize request data: {}", { initialize_data })
 
    self:_trigger(
    "initialize", initialize_data.params, initialize_data.id)
@@ -68,15 +72,15 @@ function LspEventsManager:initialize()
 
       while true do
          local data = self._lsp_reader_writer:receive_rpc()
-         sv.assert.is_not_nil(data)
-         sv.assert.is_not_nil(data.method)
+         asserts.is_not_nil(data)
+         asserts.is_not_nil(data.method)
 
-         sv.tracing.info(_module_name, "Received request '{}'", { data.method })
+         tracing.info(_module_name, "Received request '{}'", { data.method })
          self:_trigger(
          data.method, data.params, data.id)
       end
    end)
 end
 
-sv.class.setup(LspEventsManager, "LspEventsManager")
+class.setup(LspEventsManager, "LspEventsManager")
 return LspEventsManager
