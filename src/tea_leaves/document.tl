@@ -140,7 +140,7 @@ function Document:get_result(): tl.Result, boolean
    local found_errors = #errs > 0
    local cache = self._cache
    if not cache.result then
-      tracing.info(_module_name, "Type checking document '{}'", {self._uri.path})
+      tracing.info(_module_name, "Type checking document {}", {self._uri.path})
       cache.result = type_check(ast, {
          lax = is_lua(self._uri.path),
          filename = self._uri.path,
@@ -239,10 +239,10 @@ local function insert_errs(fname: string, diags: {lsp.Diagnostic}, tks: {Token},
    end
 end
 
-function Document:publish_diagnostics(uri: string, diagnostics: {lsp.Diagnostic}, version: number)
-   tracing.info(_module_name, "publishing diagnostics for {}...", {self._uri})
+function Document:_publish_diagnostics(diagnostics: {lsp.Diagnostic}, version: number)
+   tracing.debug(_module_name, "Publishing diagnostics for {}...", {self._uri.path})
    self._lsp_reader_writer:send_rpc_notification("textDocument/publishDiagnostics", {
-      uri = uri,
+      uri = Uri.tostring(self._uri),
       diagnostics = diagnostics,
       version = version,
    } as lsp.Method.Params)
@@ -258,9 +258,8 @@ end
 
 function Document:process_and_publish_results()
    local tks, err_tks = self:get_tokens()
-   local uri_str <const> = Uri.tostring(self._uri)
    if #err_tks > 0 then
-      self:publish_diagnostics(uri_str, imap(err_tks, function(t: tl.Error): lsp.Diagnostic
+      self:_publish_diagnostics(imap(err_tks, function(t: tl.Error): lsp.Diagnostic
          return {
             range = {
                start = lsp.position(t.y - 1, t.x - 1),
@@ -275,7 +274,7 @@ function Document:process_and_publish_results()
 
    local _, parse_errs = self:get_ast()
    if #parse_errs > 0 then
-      self:publish_diagnostics(uri_str, imap(parse_errs, function(e: tl.Error): lsp.Diagnostic
+      self:_publish_diagnostics(imap(parse_errs, function(e: tl.Error): lsp.Diagnostic
          return make_diagnostic_from_error(tks, e, "Error")
       end))
       return
@@ -303,7 +302,7 @@ function Document:process_and_publish_results()
    insert_errs(fname, diags, tks, warnings, "Warning")
    insert_errs(fname, diags, tks, werrors, "Error")
    insert_errs(fname, diags, tks, result.type_errors, "Error")
-   self:publish_diagnostics(Uri.tostring(self._uri), diags)
+   self:_publish_diagnostics(diags)
 end
 
 function Document:get_type_info_for_symbol(identifier:string, where: lsp.Position): tl.TypeInfo
@@ -374,11 +373,11 @@ function Document:type_information_at(where: lsp.Position): tl.TypeInfo
    local type_id = line_info[where.character] or line_info[where.character-1] or line_info[where.character+1]
 
    if type_id == nil then
-      tracing.warning(_module_name, "Could not find type id for file '{}' at position:\n{}\nLine info:{}", {self._uri.path, where, line_info})
+      tracing.warning(_module_name, "Could not find type id for file {} at position {}, line info {}", {self._uri.path, where, line_info})
       return nil
    end
 
-   tracing.trace(_module_name, "Successfully found type id '{}'", {type_id})
+   tracing.trace(_module_name, "Successfully found type id {}", {type_id})
 
    local type_info = tr.types[type_id]
 

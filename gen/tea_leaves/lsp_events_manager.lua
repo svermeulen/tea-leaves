@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local debug = _tl_compat and _tl_compat.debug or debug; local xpcall = _tl_compat and _tl_compat.xpcall or xpcall; local _module_name = "event_handler_manager"
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local debug = _tl_compat and _tl_compat.debug or debug; local xpcall = _tl_compat and _tl_compat.xpcall or xpcall; local _module_name = "lsp_events_manager"
 
 local lsp = require("tea_leaves.lsp")
 local LspReaderWriter = require("tea_leaves.lsp_reader_writer")
@@ -31,6 +31,8 @@ function LspEventsManager:set_handler(method, handler)
 end
 
 function LspEventsManager:_trigger(method, params, id)
+   tracing.debug(_module_name, "Received request from client for method {}", { method })
+
    if self._handlers[method] then
       local ok
       local err
@@ -40,12 +42,12 @@ function LspEventsManager:_trigger(method, params, id)
       debug.traceback)
 
       if ok then
-         tracing.info(_module_name, "Successfully handled request '{}'", { method })
+         tracing.debug(_module_name, "Successfully handled request with method {}", { method })
       else
-         tracing.error(_module_name, "Error in handler for '{}': {}", { method, err })
+         tracing.error(_module_name, "Error in handler for request with method {}: {}", { method, err })
       end
    else
-      tracing.warning(_module_name, "No handler found for event '{}'", { method })
+      tracing.warning(_module_name, "No handler found for event with method {}", { method })
    end
 end
 
@@ -57,8 +59,7 @@ function LspEventsManager:_receive_initialize_request()
    asserts.that(initialize_data.method ~= nil, "No method in initial request")
    asserts.that(initialize_data.method == "initialize", "Initial method was not 'initialize'")
 
-   tracing.debug(_module_name, "Received initialize request", {})
-   tracing.trace(_module_name, "Initialize request data: {}", { initialize_data })
+   tracing.trace(_module_name, "Received initialize request from client with data: {}", { initialize_data })
 
    self:_trigger(
    "initialize", initialize_data.params, initialize_data.id)
@@ -74,7 +75,6 @@ function LspEventsManager:initialize()
          asserts.is_not_nil(data)
          asserts.is_not_nil(data.method)
 
-         tracing.info(_module_name, "Received request '{}'", { data.method })
          self:_trigger(
          data.method, data.params, data.id)
       end

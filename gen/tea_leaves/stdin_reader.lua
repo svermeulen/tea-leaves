@@ -26,7 +26,7 @@ function StdinReader:initialize()
    self._stdin = uv.new_pipe(false)
    asserts.that(self._stdin ~= nil)
    assert(self._stdin:open(0))
-   tracing.debug(_module_name, "Opened pipe for stdin.  Now waiting to receive data...")
+   tracing.trace(_module_name, "Opened pipe for stdin.  Now waiting to receive data...")
 
    assert(self._stdin:read_start(function(err, chunk)
       if self._disposed then
@@ -34,7 +34,7 @@ function StdinReader:initialize()
       end
       assert(not err, err)
       if chunk then
-         tracing.debug(_module_name, "Received chunk '{}' from stdin", { chunk })
+         tracing.trace(_module_name, "Received new data chunk from stdin: {}", { chunk })
 
          self._buffer = self._buffer .. chunk
          self._chunk_added_event:set()
@@ -56,20 +56,18 @@ function StdinReader:read_line()
    asserts.that(lusc.is_available())
 
    while true do
-      tracing.trace(_module_name, "calling self._buffer:find", {})
       local i = self._buffer:find("\n")
 
       if i then
-         tracing.trace(_module_name, "Buffer before extraction: '{buffer}'", { self._buffer })
          local line = self._buffer:sub(1, i - 1)
          self._buffer = self._buffer:sub(i + 1)
          line = line:gsub("\r$", "")
-         tracing.trace(_module_name, "Parsed line from buffer.  Line: '{line}'.  Buffer is now: '{buffer}'", { line, self._buffer })
+         tracing.trace(_module_name, "Successfully parsed line from buffer: {line}.  Buffer is now: {buffer}", { line, self._buffer })
          return line
       else
-         tracing.trace(_module_name, "got false back.  Waiting for more data...", {})
+         tracing.trace(_module_name, "No line available yet.  Waiting for more data...", {})
          self._chunk_added_event:await()
-         tracing.debug(_module_name, "received more data", {})
+         tracing.trace(_module_name, "Checking stdin again for new line...", {})
       end
    end
 end

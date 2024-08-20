@@ -60,15 +60,14 @@ local function main()
 
    cached_entries = nil
 
-   tracing.info(_module_name, "Started new instance tea-leaves. Lua Version: '{version}'. Platform: {platform}", {_VERSION, util.get_platform()})
-   tracing.info(_module_name, "Received command line args: '{}'", {args})
+   tracing.info(_module_name, "Started new instance tea-leaves. Lua Version: {version}. Platform: {platform}", {_VERSION, util.get_platform()})
+   tracing.info(_module_name, "Received command line args: {}", {args})
    tracing.info(_module_name, "CWD = {cwd}", {uv.cwd()})
-   tracing.info(_module_name, "Starting tea-leaves server...")
 
    local disposables:{IDisposable}
 
    local function initialize()
-      tracing.info(_module_name, "Constructing object graph...", {})
+      tracing.debug(_module_name, "Running object graph construction phase...", {})
 
       local root_nursery = lusc.get_root_nursery()
       local stdin_reader = StdinReader()
@@ -79,13 +78,14 @@ local function main()
       local env_updater = EnvUpdater(server_state, root_nursery, document_manager)
       local misc_handlers = MiscHandlers(lsp_events_manager, lsp_reader_writer, server_state, document_manager, trace_stream, args, env_updater)
 
-      tracing.info(_module_name, "Initializing...", {})
+      tracing.debug(_module_name, "Running initialize phase...", {})
       stdin_reader:initialize()
       lsp_reader_writer:initialize()
       lsp_events_manager:initialize()
       misc_handlers:initialize()
 
       lsp_events_manager:set_handler("shutdown", function()
+         tracing.info(_module_name, "Received shutdown request from client.  Attempting to stop luv...", {})
          uv.stop()
       end)
 
@@ -103,10 +103,6 @@ local function main()
          end
       end
    end
-
-   -- TODO - remove this, shouldn't need this hack
-   local keep_alive_timer = uv.new_timer()
-   keep_alive_timer:start(1000000, 1000000, function() end)
 
    local lusc_timer = uv.new_timer()
    lusc_timer:start(0, 0, function()
@@ -135,9 +131,9 @@ local function main()
    end)
 
    local function run_luv():nil
-      tracing.debug(_module_name, "Running luv event loop...")
+      tracing.trace(_module_name, "Running luv event loop...")
       uv.run()
-      tracing.debug(_module_name, "Luv event loop stopped")
+      tracing.trace(_module_name, "Luv event loop stopped")
       lusc_timer:close()
 
       uv.walk(function(handle:uv.Handle)

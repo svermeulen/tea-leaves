@@ -74,7 +74,7 @@ function LspReaderWriter:initialize()
    self._stdout = uv.new_pipe(false)
    asserts.that(self._stdout ~= nil)
    assert(self._stdout:open(1))
-   tracing.debug(_module_name, "Opened pipe for stdout")
+   tracing.trace(_module_name, "Opened pipe for stdout")
 end
 
 function LspReaderWriter:_decode_header()
@@ -99,14 +99,13 @@ function LspReaderWriter:receive_rpc()
 
    tracing.trace(_module_name, "Successfully read LSP rpc header: {header_info}\nWaiting to receive body...", { header_info })
    local body_line = self._stdin_reader:read(header_info.length)
-   tracing.trace(_module_name, "Received request Body: '{body_line}'", { body_line })
+   tracing.trace(_module_name, "Received request Body: {body_line}", { body_line })
 
    local data = json.decode(body_line)
 
    asserts.that(data and type(data) == 'table', "Malformed json")
    asserts.that(data.jsonrpc == "2.0", "Incorrect jsonrpc version!  Got {} but expected 2.0", data.jsonrpc)
 
-   tracing.trace(_module_name, "Successfully parsed lsp rpc!")
    return data
 end
 
@@ -118,7 +117,7 @@ function LspReaderWriter:_encode(t)
    local content = "Content-Length: " .. tostring(#msg) .. "\r\n\r\n" .. msg
    assert(self._stdout:write(content))
 
-   tracing.trace(_module_name, "Sending data: '{content}'", { content })
+   tracing.trace(_module_name, "Sending data: {content}", { content })
 end
 
 function LspReaderWriter:send_rpc(id, t)

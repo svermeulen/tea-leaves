@@ -1,4 +1,4 @@
-local _module_name = "event_handler_manager"
+local _module_name = "lsp_events_manager"
 
 local lsp <const> = require("tea_leaves.lsp")
 local LspReaderWriter <const> = require("tea_leaves.lsp_reader_writer")
@@ -31,6 +31,8 @@ function LspEventsManager:set_handler(method:lsp.Method.Name, handler:function(l
 end
 
 function LspEventsManager:_trigger(method:lsp.Method.Name, params:lsp.Method.Params, id:integer)
+   tracing.debug(_module_name, "Received request from client for method {}", {method})
+
    if self._handlers[method] then
       local ok: boolean
       local err: string
@@ -40,12 +42,12 @@ function LspEventsManager:_trigger(method:lsp.Method.Name, params:lsp.Method.Par
          debug.traceback as function) as (boolean, string)
 
       if ok then
-         tracing.info(_module_name, "Successfully handled request '{}'", {method})
+         tracing.debug(_module_name, "Successfully handled request with method {}", {method})
       else
-         tracing.error(_module_name, "Error in handler for '{}': {}", {method, err})
+         tracing.error(_module_name, "Error in handler for request with method {}: {}", {method, err})
       end
    else
-      tracing.warning(_module_name, "No handler found for event '{}'", {method})
+      tracing.warning(_module_name, "No handler found for event with method {}", {method})
    end
 end
 
@@ -57,8 +59,7 @@ function LspEventsManager:_receive_initialize_request()
    asserts.that(initialize_data.method ~= nil, "No method in initial request")
    asserts.that(initialize_data.method == "initialize", "Initial method was not 'initialize'")
 
-   tracing.debug(_module_name, "Received initialize request", {})
-   tracing.trace(_module_name, "Initialize request data: {}", {initialize_data})
+   tracing.trace(_module_name, "Received initialize request from client with data: {}", {initialize_data})
 
    self:_trigger(
       "initialize", initialize_data.params as lsp.Method.Params, initialize_data.id as integer)
@@ -74,7 +75,6 @@ function LspEventsManager:initialize()
          asserts.is_not_nil(data)
          asserts.is_not_nil(data.method)
 
-         tracing.info(_module_name, "Received request '{}'", {data.method})
          self:_trigger(
             data.method as lsp.Method.Name, data.params as lsp.Method.Params, data.id as integer)
       end

@@ -162,7 +162,7 @@ function TraceStream:log_entry(entry)
       elseif value_type == "userdata" then
          value = tostring(value)
       elseif value_type == "table" then
-         value = inspect(value)
+         value = inspect(value, { newline = ' ' })
       else
 
          asserts.that(value_type == "string" or value_type == "number" or value_type == "nil" or value_type == "boolean")

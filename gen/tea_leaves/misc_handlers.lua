@@ -65,12 +65,12 @@ function MiscHandlers:_on_initialize(params, id)
       self._trace_stream:rename_output_file(new_log_name)
    end
 
-   tracing.info(_module_name, "Received root dir: '{}'", { root_path.value })
+   tracing.info(_module_name, "Received initialize request from client. Teal project dir: {}", { root_path.value })
 
    self._server_state:initialize(root_path)
    self._env_updater:initialize()
 
-   tracing.debug(_module_name, "Sending initialize response message...", {})
+   tracing.trace(_module_name, "Sending initialize response message...", {})
 
    self._lsp_reader_writer:send_rpc(id, {
       capabilities = self._server_state.capabilities,
@@ -79,8 +79,6 @@ function MiscHandlers:_on_initialize(params, id)
          version = self._server_state.version,
       },
    })
-
-   tracing.debug(_module_name, "Initialize response message sent", {})
 end
 
 function MiscHandlers:_on_initialized()
@@ -160,13 +158,13 @@ function MiscHandlers:_on_completion(params, id)
    end
 
    local token_pos = lsp.position(tk.y, tk.x)
-   tracing.trace(_module_name, "Found actual token '{}' at position: '{}'", { tk.tk, token_pos })
+   tracing.trace(_module_name, "Found actual token {} at position: {}", { tk.tk, token_pos })
 
    local type_info = doc:type_information_at(token_pos)
    local items = {}
 
    if not type_info then
-      tracing.trace(_module_name, "No type information found at calculated token position '{}'.  Attempting to get type information by raw token instead.", { token_pos })
+      tracing.trace(_module_name, "No type information found at calculated token position {}.  Attempting to get type information by raw token instead.", { token_pos })
 
       type_info = doc:type_information_for_token(tk)
 
@@ -287,7 +285,7 @@ function MiscHandlers:_on_hover(params, id)
    tracing.trace(_module_name, "Found actual token '{}' at position: '{}'", { tk.tk, token_pos })
    local type_info = doc:type_information_at(token_pos)
    if not type_info then
-      tracing.warning(_module_name, "No type information found at calculated token position.  Attempting to get type information by raw token instead.", {})
+      tracing.warning(_module_name, "No type information found at calculated token position.  Attempting to get type information by raw token instead...", {})
 
       type_info = doc:type_information_for_token(tk)
 
