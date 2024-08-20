@@ -31,7 +31,15 @@ A language server for the [Teal language](https://github.com/teal-language/tl)
 
 ### Neovim
 
-* TBD
+Note: Only valid after [this pr](https://github.com/neovim/nvim-lspconfig/pull/3271) is merged.
+
+Install the [lspconfig plugin](https://github.com/neovim/nvim-lspconfig) and put the following in your `init.vim` or `init.lua`
+
+```lua
+local lspconfig = require("lspconfig")
+
+lspconfig.tea_leaves.setup {}
+```
 
 # Usage
 
