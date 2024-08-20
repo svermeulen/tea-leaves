@@ -1,6 +1,6 @@
 rockspec_format = "3.0"
 package = "tea-leaves"
-version = "0.0.1-1"
+version = "0.0.2-1"
 source = {
    url = "git+https://github.com/svermeulen/tea-leaves.git",
    branch = "main"
