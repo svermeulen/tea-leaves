@@ -18,7 +18,7 @@ A LSP server for [teal](https://github.com/teal-language/tl).
 * From repo root:
   * `luarocks init`
   * `./luarocks make`
-  * `./lua_modules/bin/tea-leaves`
+  * `./lua_modules/bin/tea-leaves` (or `./lua_modules/bin/tea-leaves.bat` on windows)
 
 # Usage
 
