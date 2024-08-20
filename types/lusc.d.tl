@@ -205,6 +205,8 @@ local record lusc
    force_unavailable:function<T>(handler:function():T):T
    force_unavailable_wrap:function(handler:function()):function()
 
+   set_log_handler:function(function(message:string))
+
    set_impl:function(any)
 end
 

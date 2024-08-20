@@ -56,6 +56,11 @@ local function main()
       for _, entry in ipairs(cached_entries) do
          trace_stream:log_entry(entry)
       end
+
+      -- Uncomment if lusc is suspected to have an issue
+      -- lusc.set_log_handler(function(message:string)
+      --    tracing.debug("lusc", message, {})
+      -- end)
    end
 
    cached_entries = nil
@@ -85,12 +90,12 @@ local function main()
       misc_handlers:initialize()
 
       lsp_events_manager:set_handler("shutdown", function()
-         tracing.info(_module_name, "Received shutdown request from client.  Attempting to stop luv...", {})
-         uv.stop()
+         tracing.info(_module_name, "Received shutdown request from client.  Cancelling all lusc tasks...", {})
+         root_nursery.cancel_scope:cancel()
       end)
 
       disposables =  {
-         stdin_reader,
+         stdin_reader, lsp_reader_writer
       } as {IDisposable}
    end
 
@@ -127,6 +132,7 @@ local function main()
          initialize()
       end)
 
+      -- Tell lusc to end once all tasks complete
       lusc.stop()
    end)
 

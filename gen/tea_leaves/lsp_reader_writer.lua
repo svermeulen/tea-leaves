@@ -15,9 +15,11 @@ local LspReaderWriter = {}
 
 
 
+
 function LspReaderWriter:__init(stdin_reader)
    asserts.is_not_nil(stdin_reader)
    self._stdin_reader = stdin_reader
+   self._disposed = false
 end
 
 
@@ -75,6 +77,13 @@ function LspReaderWriter:initialize()
    asserts.that(self._stdout ~= nil)
    assert(self._stdout:open(1))
    tracing.trace(_module_name, "Opened pipe for stdout")
+end
+
+function LspReaderWriter:dispose()
+   asserts.that(not self._disposed)
+   self._disposed = true
+   self._stdout:close()
+   tracing.debug(_module_name, "Closed pipe for stdout")
 end
 
 function LspReaderWriter:_decode_header()

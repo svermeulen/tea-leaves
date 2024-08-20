@@ -56,6 +56,11 @@ local function main()
       for _, entry in ipairs(cached_entries) do
          trace_stream:log_entry(entry)
       end
+
+
+
+
+
    end
 
    cached_entries = nil
@@ -85,12 +90,12 @@ local function main()
       misc_handlers:initialize()
 
       lsp_events_manager:set_handler("shutdown", function()
-         tracing.info(_module_name, "Received shutdown request from client.  Attempting to stop luv...", {})
-         uv.stop()
+         tracing.info(_module_name, "Received shutdown request from client.  Cancelling all lusc tasks...", {})
+         root_nursery.cancel_scope:cancel()
       end)
 
       disposables = {
-         stdin_reader,
+         stdin_reader, lsp_reader_writer,
       }
    end
 
@@ -126,6 +131,7 @@ local function main()
          tracing.trace(_module_name, "Received entry point call from lusc luv")
          initialize()
       end)
+
 
       lusc.stop()
    end)

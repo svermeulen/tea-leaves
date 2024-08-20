@@ -11,6 +11,7 @@ local class <const> = require("tea_leaves.class")
 local record LspReaderWriter
    _stdin_reader:StdinReader
    _stdout: uv.Pipe
+   _disposed: boolean
 
    metamethod __call: function(self: LspReaderWriter, stdin_reader: StdinReader): LspReaderWriter
 end
@@ -18,6 +19,7 @@ end
 function LspReaderWriter:__init(stdin_reader: StdinReader)
    asserts.is_not_nil(stdin_reader)
    self._stdin_reader = stdin_reader
+   self._disposed = false
 end
 
 local record HeaderInfo
@@ -75,6 +77,13 @@ function LspReaderWriter:initialize()
    asserts.that(self._stdout ~= nil)
    assert(self._stdout:open(1))
    tracing.trace(_module_name, "Opened pipe for stdout")
+end
+
+function LspReaderWriter:dispose()
+   asserts.that(not self._disposed)
+   self._disposed = true
+   self._stdout:close()
+   tracing.debug(_module_name, "Closed pipe for stdout")
 end
 
 function LspReaderWriter:_decode_header():HeaderInfo
