@@ -31,7 +31,7 @@ local function init_logging(verbose)
    if verbose then
       tracing.set_min_level("TRACE")
    else
-      tracing.set_min_level("WARNING")
+      tracing.set_min_level("INFO")
    end
    return trace_stream
 end

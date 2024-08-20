@@ -31,7 +31,7 @@ function LspEventsManager:set_handler(method, handler)
 end
 
 function LspEventsManager:_trigger(method, params, id)
-   tracing.debug(_module_name, "Received request from client for method {}", { method })
+   tracing.info(_module_name, "Received request from client for method {}", { method })
 
    if self._handlers[method] then
       local ok
