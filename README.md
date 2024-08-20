@@ -1,7 +1,7 @@
 
 # Tea Leaves
 
-A LSP server for [teal](https://github.com/teal-language/tl).
+A language server for the [Teal language](https://github.com/teal-language/tl)
 
 [![test](https://github.com/svermeulen/tea-leaves/actions/workflows/test.yml/badge.svg)](https://github.com/svermeulen/tea-leaves/actions/workflows/test.yml)
 
