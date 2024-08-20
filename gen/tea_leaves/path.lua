@@ -26,14 +26,11 @@ local Path = {WriteTextOpts = {}, CreateDirectoryArgs = {}, }
 
 
 
-
-
 function Path:__init(value)
    asserts.that(type(value) == "string")
    asserts.that(#value > 0, "Path must be non empty string")
 
    self._value = value
-   self._is_canonical = nil
 end
 
 function Path:is_valid()
@@ -190,79 +187,6 @@ function Path:get_file_name()
    return path:match('[\\/]([^\\/]*)$')
 end
 
-local function array_reversed(list)
-   local result = {}
-   for i = 1, #list do
-      result[#list - i + 1] = list[i]
-   end
-   return result
-end
-
-function Path:canonicalize()
-   if self._is_canonical ~= nil and self._is_canonical then
-      return self
-   end
-
-   local is_abs = self:is_absolute()
-   local parts = self:get_parts()
-   local to_skip = 0
-   local new_parts = {}
-
-   for i = #parts, 1, -1 do
-      local part = parts[i]
-
-      if part == ".." then
-         to_skip = to_skip + 1
-      else
-         if to_skip > 0 then
-            to_skip = to_skip - 1
-         else
-
-            if #part > 0 and part ~= "." then
-               table.insert(new_parts, part)
-            end
-         end
-      end
-   end
-
-   local path_sep = get_path_separator()
-   local new_value = util.string_join(path_sep, array_reversed(new_parts))
-
-   for _ = 1, to_skip do
-      new_value = ".." .. path_sep .. new_value
-   end
-
-   if util.get_platform() == 'windows' then
-      local lower_case_drive_letter = new_value:match('^[a-z]:' .. path_sep)
-
-      if lower_case_drive_letter then
-         new_value = string.upper(lower_case_drive_letter) .. new_value:sub(4, #new_value)
-      end
-   end
-
-   local result
-
-   if util.get_platform() == "windows" then
-      result = Path(new_value)
-   else
-      if is_abs then
-         result = Path("/" .. new_value)
-      else
-         result = Path(new_value)
-      end
-   end
-
-   result._is_canonical = true
-   return result
-end
-
-function Path:_get_is_canonical()
-   if self._is_canonical == nil then
-      self._is_canonical = self._value == self:canonicalize()._value
-   end
-   return self._is_canonical
-end
-
 function Path:get_extension()
    local result = self._value:match('%.([^%.]*)$')
    return result
@@ -383,9 +307,7 @@ end
 class.setup(Path, "Path", {
    getters = {
       value = "get_value",
-      is_canonical = "_get_is_canonical",
    },
-   nilable_members = { "_is_canonical" },
 })
 
 function Path.cwd()

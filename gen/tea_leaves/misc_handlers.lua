@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local _module_name = "misc_handlers"
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local math = _tl_compat and _tl_compat.math or math; local pairs = _tl_compat and _tl_compat.pairs or pairs; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local _module_name = "misc_handlers"
 
 
 local EnvUpdater = require("tea_leaves.env_updater")
@@ -54,13 +54,14 @@ function MiscHandlers:_on_initialize(params, id)
       root_dir_str = params.rootPath
    end
 
-   local root_path = Path(root_dir_str):canonicalize()
+   local root_path = Path(root_dir_str)
+   asserts.that(root_path:exists(), "Expected path to exist at '{}'", root_path.value)
 
 
 
-   if self._cl_args.log_name_method == "by_proj_path" then
-      local pid = uv.os_getpid()
-      local new_log_name = root_path.value:gsub('[\\/:*?"<>|]+', '_') .. "_" .. pid
+   if self._cl_args.log_mode == "by_proj_path" then
+      local pid = math.floor(uv.os_getpid())
+      local new_log_name = root_path.value:gsub('[\\/:*?"<>|]+', '_') .. "_" .. tostring(pid)
       self._trace_stream:rename_output_file(new_log_name)
    end
 
@@ -314,9 +315,8 @@ function MiscHandlers:_on_hover(params, id)
       },
    })
 end
-
 function MiscHandlers:_add_handler(name, handler)
-   self._lsp_events_manager:set_handler(name, function() handler(self) end)
+   self._lsp_events_manager:set_handler(name, function(params, id) handler(self, params, id) end)
 end
 
 function MiscHandlers:initialize()

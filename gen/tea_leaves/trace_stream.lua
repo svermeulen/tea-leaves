@@ -83,7 +83,7 @@ function TraceStream:_choose_log_file_path()
    local date = os.date("*t")
    local pid = uv.os_getpid()
 
-   return log_dir:join(string.format("%d-%d-%d_%s.txt", date.year, date.month, date.day, pid))
+   return log_dir:join(string.format("%d-%d-%d_%d.txt", date.year, date.month, date.day, pid))
 end
 
 function TraceStream:initialize()
@@ -112,7 +112,7 @@ function TraceStream:rename_output_file(new_name)
    local new_path = self:_get_log_dir():join(new_name .. ".log")
    uv.fs_rename(self._log_path.value, new_path.value)
    self._log_path = new_path
-   self._file_stream = _open_write_file(self._log_path.value)
+   self._file_stream = _open_write_file_append(self._log_path.value)
 end
 
 function TraceStream:flush()

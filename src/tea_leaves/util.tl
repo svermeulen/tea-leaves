@@ -1,5 +1,7 @@
+local _module_name = "util"
 
 local uv <const> = require("luv")
+local tracing <const> = require("tea_leaves.tracing")
 
 local record util
    record TryOpts<T>
@@ -100,9 +102,10 @@ function util.get_platform():util.PlatformType
          _os_type = "linux"
       elseif raw_os_name:find("darwin") ~= nil then
          _os_type = "osx"
-      elseif raw_os_name:find("windows") ~= nil then
+      elseif raw_os_name:find("windows") ~= nil or raw_os_name:find("mingw") ~= nil then
          _os_type = "windows"
       else
+         tracing.warning(_module_name, "Unrecognized platform '{}'", {raw_os_name})
          _os_type = "unknown"
       end
    end

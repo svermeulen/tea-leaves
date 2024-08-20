@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local _module_name = "main"
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local ipairs = _tl_compat and _tl_compat.ipairs or ipairs; local table = _tl_compat and _tl_compat.table or table; local _module_name = "main"
 
 
 local EnvUpdater = require("tea_leaves.env_updater")
@@ -37,11 +37,30 @@ local function init_logging(verbose)
 end
 
 local function main()
+
+
+   local cached_entries = {}
+   tracing.add_stream(function(entry)
+      if cached_entries then
+         table.insert(cached_entries, entry)
+      end
+   end)
+
    local args = args_parser.parse_args()
 
-   local trace_stream = init_logging(args.verbose)
+   local trace_stream
 
-   tracing.info(_module_name, "Started new instance tea-leaves. Lua Version: '{version}'", { _VERSION })
+   if args.log_mode ~= "none" then
+      trace_stream = init_logging(args.verbose)
+
+      for _, entry in ipairs(cached_entries) do
+         trace_stream:log_entry(entry)
+      end
+   end
+
+   cached_entries = nil
+
+   tracing.info(_module_name, "Started new instance tea-leaves. Lua Version: '{version}'. Platform: {platform}", { _VERSION, util.get_platform() })
    tracing.info(_module_name, "Received command line args: '{}'", { args })
    tracing.info(_module_name, "CWD = {cwd}", { uv.cwd() })
    tracing.info(_module_name, "Starting tea-leaves server...")

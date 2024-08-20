@@ -54,13 +54,14 @@ function MiscHandlers:_on_initialize(params:lsp.Method.Params, id:integer):nil
       root_dir_str = params.rootPath as string
    end
 
-   local root_path = Path(root_dir_str):canonicalize()
+   local root_path = Path(root_dir_str)
+   asserts.that(root_path:exists(), "Expected path to exist at '{}'", root_path.value)
 
    -- Now that we have the project path, rename log file so it is more discoverable
    -- so we can do project specific debugging more easily
-   if self._cl_args.log_name_method == "by_proj_path" then
-      local pid = uv.os_getpid()
-      local new_log_name = root_path.value:gsub('[\\/:*?"<>|]+', '_') .. "_" .. pid
+   if self._cl_args.log_mode == "by_proj_path" then
+      local pid = math.floor(uv.os_getpid())
+      local new_log_name = root_path.value:gsub('[\\/:*?"<>|]+', '_') .. "_" .. tostring(pid)
       self._trace_stream:rename_output_file(new_log_name)
    end
 
@@ -314,9 +315,8 @@ function MiscHandlers:_on_hover(params:lsp.Method.Params, id:integer):nil
       },
    })
 end
-
 function MiscHandlers:_add_handler(name:lsp.Method.Name, handler:function(MiscHandlers, lsp.Method.Params, integer):nil)
-   self._lsp_events_manager:set_handler(name, function() handler(self) end)
+   self._lsp_events_manager:set_handler(name, function(params:lsp.Method.Params, id:integer) handler(self, params, id) end)
 end
 
 function MiscHandlers:initialize()

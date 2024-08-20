@@ -37,11 +37,30 @@ local function init_logging(verbose:boolean):TraceStream
 end
 
 local function main()
+   -- Immediately listen to log events and cache until
+   -- we set up our file logger
+   local cached_entries:{TraceEntry} = {}
+   tracing.add_stream(function(entry:TraceEntry)
+      if cached_entries then
+         table.insert(cached_entries, entry)
+      end
+   end)
+
    local args = args_parser.parse_args()
 
-   local trace_stream = init_logging(args.verbose)
+   local trace_stream:TraceStream
 
-   tracing.info(_module_name, "Started new instance tea-leaves. Lua Version: '{version}'", {_VERSION})
+   if args.log_mode ~= "none" then
+      trace_stream = init_logging(args.verbose)
+
+      for _, entry in ipairs(cached_entries) do
+         trace_stream:log_entry(entry)
+      end
+   end
+
+   cached_entries = nil
+
+   tracing.info(_module_name, "Started new instance tea-leaves. Lua Version: '{version}'. Platform: {platform}", {_VERSION, util.get_platform()})
    tracing.info(_module_name, "Received command line args: '{}'", {args})
    tracing.info(_module_name, "CWD = {cwd}", {uv.cwd()})
    tracing.info(_module_name, "Starting tea-leaves server...")
