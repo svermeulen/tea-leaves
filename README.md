@@ -20,6 +20,19 @@ A LSP server for [teal](https://github.com/teal-language/tl).
   * `./luarocks make`
   * `./lua_modules/bin/tea-leaves` (or `./lua_modules/bin/tea-leaves.bat` on windows)
 
+# Features
+
+* Go to definition (`textDocument/definition`)
+* Linting (`textDocument/publishDiagnostics`)
+* Intellisense (`textDocument/completion`)
+* Hover (`textDocument/hover`)
+
+# Editor Setup
+
+### Neovim
+
+* TBD
+
 # Usage
 
 ```
