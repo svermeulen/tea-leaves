@@ -15,10 +15,9 @@ A language server for the [Teal language](https://github.com/teal-language/tl)
 ### From source
 
 * Clone repo
-* From repo root:
-  * `luarocks init`
-  * `./luarocks make`
-  * `./lua_modules/bin/tea-leaves` (or `./lua_modules/bin/tea-leaves.bat` on windows)
+* From repo root: 
+  * `scripts/setup_local_luarocks`
+  * `./lua_modules/bin/tea-leaves`
 
 # Features
 
