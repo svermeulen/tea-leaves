@@ -23,10 +23,12 @@ A LSP server for [teal](https://github.com/teal-language/tl).
 # Usage
 
 ```
-tea-leaves [--verbose=true] [--log-name-method=by_proj_path|by_date]
+tea-leaves [--verbose=true] [--log-mode=none|by_proj_path|by_date]
 ```
 
 Note:
 
 * All args are optional
+* By default, logging is 'none' which disables logging completely
+* When logging is set to by_proj_path or by_date, the log is output to `[User Home Directory]/.cache/tea-leaves`
 
