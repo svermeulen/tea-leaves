@@ -12,6 +12,8 @@ A language server for the [Teal language](https://github.com/teal-language/tl)
 * `luarocks install tea-leaves`
 * `tea-leaves`
 
+Tested on Windows, Linux and MacOS
+
 ### From source
 
 * Clone repo
