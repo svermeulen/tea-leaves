@@ -133,7 +133,7 @@ function LspReaderWriter:send_rpc(id, t)
    self:_encode({
       jsonrpc = "2.0",
       id = json_nullable(id),
-      result = t,
+      result = json_nullable(t),
    })
 end
 
