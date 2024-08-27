@@ -1,6 +1,8 @@
 
 # Tea Leaves
 
+# NOTE: This project is now deprecated.  It has been moved and renamed to [teal-language/teal-language-server](https://github.com/teal-language/teal-language-server)
+
 A language server for the [Teal language](https://github.com/teal-language/tl)
 
 [![test](https://github.com/svermeulen/tea-leaves/actions/workflows/test.yml/badge.svg)](https://github.com/svermeulen/tea-leaves/actions/workflows/test.yml)
