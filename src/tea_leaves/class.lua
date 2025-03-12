@@ -69,7 +69,7 @@ function Class.setup(class, class_name, options)
   if options.getters then
     for k, v in pairs(options.getters) do
       if type(v) == "string" then
-        asserts.that(class[v] ~= nil, "Found getter property '{}' mapped to non-existent method '{}' for class '{}'", k, v, class_name)
+        asserts.that(class[v] ~= nil, "Found getter property {} mapped to non-existent method {} for class {}", k, v, class_name)
       end
     end
   end
@@ -85,7 +85,7 @@ function Class.setup(class, class_name, options)
   if options.setters then
     for k, v in pairs(options.setters) do
       if type(v) == "string" then
-        asserts.that(class[v] ~= nil, "Found setter property '{}' mapped to non-existent method '{}' for class '{}'", k, v, class_name)
+        asserts.that(class[v] ~= nil, "Found setter property {} mapped to non-existent method {} for class {}", k, v, class_name)
       end
     end
   end
@@ -104,7 +104,7 @@ function Class.setup(class, class_name, options)
   end
 
   if is_immutable then
-    asserts.that(is_closed, "Attempted to create a non-closed immutable class '{}'.  This is not allowed", class_name)
+    asserts.that(is_closed, "Attempted to create a non-closed immutable class {}.  This is not allowed", class_name)
   end
 
   local function create_immutable_wrapper(t, class_name)
@@ -112,7 +112,7 @@ function Class.setup(class, class_name, options)
     local mt = {
         __index = t,
         __newindex = function(t, k, v)
-            asserts.fail("Attempted to change field '{}' of immutable class '{}'", k, class_name)
+            asserts.fail("Attempted to change field {} of immutable class {}", k, class_name)
         end,
         __len = function()
             return #t
@@ -165,17 +165,17 @@ function Class.setup(class, class_name, options)
            if is_closed then
              -- This check means that member values cannot ever be set to nil
              -- So we provide the closed flag to allow for this case
-             asserts.that(static_member ~= nil or nilable_members[k] ~= nil, "Attempted to get non-existent member '{}' on class '{}'.  If its valid for the class to have nil members, then pass 'closed=false' to class.setup", k, class_name)
+             asserts.that(static_member ~= nil or nilable_members[k] ~= nil, "Attempted to get non-existent member {} on class {}.  If its valid for the class to have nil members, then pass 'closed=false' to class.setup", k, class_name)
            end
            return static_member
          end
 
          mt.__newindex = function(_, k, value)
            if is_closed and nilable_members[k] == nil then
-             asserts.that(options.setters, "Attempted to set non-existent property '{}' on class '{}'", k, class_name)
+             asserts.that(options.setters, "Attempted to set non-existent property {} on class {}", k, class_name)
 
              local setter_value = options.setters[k]
-             asserts.that(setter_value, "Attempted to set non-existent property '{}' on class '{}'", k, class_name)
+             asserts.that(setter_value, "Attempted to set non-existent property {} on class {}", k, class_name)
 
              if type(setter_value) == "string" then
                rawget(class, setter_value)(instance, value)
